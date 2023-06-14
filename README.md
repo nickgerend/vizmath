@@ -2,3 +2,6 @@
 
 ## Setup
 pip install vizmath
+
+## Usage
+coming soon

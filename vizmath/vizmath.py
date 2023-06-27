@@ -419,8 +419,9 @@ class vmath:
 
 class points:
 
-    viz=[]
-    df = pd.DataFrame()
+    def __init__(self):
+            self.viz=[]
+            self.df = pd.DataFrame()
 
     class point:
 

@@ -6,7 +6,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 setup(
     name="vizmath",
-    version="0.0.2",
+    version="0.0.3",
     description="Visualization math toolkit.",
     long_description=README,
     long_description_content_type="text/markdown",
@@ -16,10 +16,10 @@ setup(
     license="MIT",
     classifiers=[
         "License :: OSI Approved :: MIT License",
-        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.9",
     ],
     packages=st.find_namespace_packages(),
-    install_requires=["pandas", "numpy", "matplotlib"],
+    install_requires=["numpy", "scipy"],
     include_package_data=True,
     package_data={'': ['data/*.csv']},
 )

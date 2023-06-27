@@ -461,7 +461,7 @@ class points:
         y = [o.y for o in self.viz]
         plt.scatter(x, y)
         plt.gca().set_aspect('equal', adjustable='box')
-        plt.show(block=True)
+        plt.show()
 
 class full_bi_tree:
     

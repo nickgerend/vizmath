@@ -6,7 +6,7 @@ HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
 setup(
     name="vizmath",
-    version="0.0.7",
+    version="0.0.8",
     description="Visualization math toolkit.",
     long_description="Welcome to vizmath! Please visit [GitHub](https://github.com/nickgerend/vizmath/blob/main/README.md)",
     long_description_content_type="text/markdown",

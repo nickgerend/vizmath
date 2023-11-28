@@ -4,7 +4,7 @@
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
-import functions as vf
+from . import functions as vf
 
 class points:
 

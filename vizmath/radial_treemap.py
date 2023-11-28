@@ -8,8 +8,8 @@ import random
 import matplotlib.pyplot as plt
 import copy
 
-import functions as vf
-from draw import points as dp
+from . import functions as vf
+from .draw import points as dp
 
 class rad_treemap:
 

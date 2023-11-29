@@ -193,7 +193,7 @@ class rad_treemap:
                     if vf.rotate != 0:
                         x, y = vf.rotate(x, y, rotate_deg)
                     # list_xy.append(point(ix, level, j, x, y, len(angles1)+k+1, count, int_count, level_rank, overall_rank))
-                    rad_tm.append(id=ix, x=x, y=y, path=k+1, level=level, group=j, count=int_count, value=count, level_rank=level_rank, overall_rank=overall_rank)
+                    rad_tm.append(id=ix, x=x, y=y, path=len(angles1)+k+1, level=level, group=j, count=int_count, value=count, level_rank=level_rank, overall_rank=overall_rank)
                 ix += 1
             level += 1
         #endregion

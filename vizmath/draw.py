@@ -41,9 +41,11 @@ class points:
             self.df['x'] = [vf.rescale(x,xmin,xmax,nxmin,nxmax) for x in self.df['x']]
             self.df['y'] = [vf.rescale(y,ymin,ymax,nymin,nymax) for y in self.df['y']]
 
-    def dataframe_to_csv(self, file_name):
+    def dataframe_to_csv(self, file_name, directory=None):
         if not self.df.empty:
-            self.df.to_csv(os.path.dirname(__file__) + '/' + file_name + '.csv', encoding='utf-8', index=False)
+            target_directory = directory if directory else os.getcwd()
+            file_path = os.path.join(target_directory, file_name + '.csv')
+            self.df.to_csv(file_path, encoding='utf-8', index=False)
 
     def plot_xy(self):
         x = [o.x for o in self.viz]

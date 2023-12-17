@@ -4,7 +4,10 @@
 import pandas as pd
 import os
 import matplotlib.pyplot as plt
+
 from . import functions as vf
+
+# import functions as vf
 
 class points:
 
@@ -50,6 +53,13 @@ class points:
     def plot_xy(self):
         x = [o.x for o in self.viz]
         y = [o.y for o in self.viz]
+        plt.scatter(x, y)
+        plt.gca().set_aspect('equal', adjustable='box')
+        plt.show()
+
+    def df_plot_xy(self):
+        x = [r['x'] for o, r in self.df.iterrows()]
+        y = [r['y'] for o, r in self.df.iterrows()]
         plt.scatter(x, y)
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()

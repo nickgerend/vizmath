@@ -1,5 +1,5 @@
 #%%
-# Nick's Radial-Treeamp
+# Nick's Radial Treeamp
 
 import pandas as pd
 import numpy as np
@@ -10,6 +10,9 @@ import copy
 
 from . import functions as vf
 from .draw import points as dp
+
+# import functions as vf
+# from draw import points as dp
 
 class rad_treemap:
 
@@ -225,7 +228,7 @@ class rad_treemap:
         df_out = pd.concat(dfs, axis=0)
         return df_out
 
-    def __rad_tm_plot(self, pie_tree_df, level, transparency, line_level, mult):
+    def __rad_tm_plot(self, pie_tree_df, level, opacity, line_level, mult):
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
         df_lvl = pie_tree_df.loc[pie_tree_df['level'] == level]
@@ -237,7 +240,7 @@ class rad_treemap:
             b = random.random()
             g = random.random()
             color = (r, g, b)
-            axs.fill(x, y, alpha=transparency, fc=color)
+            axs.fill(x, y, alpha=opacity, fc=color)
             plt.plot(x, y, 'k-', linewidth=0.5)
         if line_level > 0:
             df_lvl = pie_tree_df.loc[pie_tree_df['level'] == line_level]
@@ -258,7 +261,7 @@ class rad_treemap:
                     plt.plot(x, y, color = colors[i-1], linewidth=3)
         plt.show()
 
-    def __rad_tm_plot2(self, pie_tree_df, level, transparency, title, axis, limit, fill):
+    def __rad_tm_plot2(self, pie_tree_df, level, opacity, title, axis, limit, fill):
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
         df_lvl = pie_tree_df.loc[pie_tree_df['level'] == level]
@@ -276,7 +279,7 @@ class rad_treemap:
                 b = random.random()
                 g = random.random()
                 color = (r, g, b)
-            axs.fill(x, y, alpha=transparency, fc=color)
+            axs.fill(x, y, alpha=opacity, fc=color)
         for i in range(level):
             df_lvl = pie_tree_df.loc[pie_tree_df['level'] == i+1]
             df_lvl_group = df_lvl.groupby(['group'])
@@ -306,11 +309,11 @@ class rad_treemap:
                 self.points, chart_width=1, legend_width=0.1, buffer=0.01)
             self.df_rad_treemap = self.o_rad_treemap.df
             
-    def plot_level(self, level=1, transparency=0.5, line_level=0, mult=0):
-        self.__rad_tm_plot(self.df_rad_treemap, level=level, transparency=transparency, line_level=line_level, mult=mult)
+    def plot_level(self, level=1, opacity=0.5, line_level=0, mult=0):
+        self.__rad_tm_plot(self.df_rad_treemap, level=level, opacity=opacity, line_level=line_level, mult=mult)
 
-    def plot_levels(self, level=1, transparency=0.5, title='', axis='on', limit=0, fill='gray'):
-        self.__rad_tm_plot2(self.df_rad_treemap, level=level, transparency=transparency, title=title, axis=axis, limit=limit, fill=fill)
+    def plot_levels(self, level=1, opacity=0.5, title='', axis='on', limit=0, fill='gray'):
+        self.__rad_tm_plot2(self.df_rad_treemap, level=level, opacity=opacity, title=title, axis=axis, limit=limit, fill=fill)
 
     def to_df(self):
         return self.o_rad_treemap.df

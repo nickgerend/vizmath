@@ -3,14 +3,9 @@
 from math import atan2, sqrt, sin, cos, tan, pi, exp, atan, radians
 import scipy.optimize as optimize
 import numpy as np
+import pandas as pd
 
 #region basic functions
-
-def angle_by_two_points(x1, y1, x2, y2):
-    a = atan2(x2-x1, y2-y1)*180/pi
-    if a < 0:
-        a += 360. 
-    return a
 
 def distance_between_two_points(x1, y1, x2, y2):
     return sqrt((x2-x1)**2+(y2-y1)**2)
@@ -99,7 +94,7 @@ def rotate(x, y, angledeg, x_offset=0, y_offset=0):
     return xa, ya
 
 def angle_of_two_points(x1, y1, x2, y2):
-    return atan2(x2-x1, y2-y1)*180/pi - 90
+    return atan2(x2-x1, y2-y1)*180/pi
 
 def point_along_path_3d(x1, y1, z1, x2, y2, z2, d):
     u = distance_between_two_points_3d(x1, y1, z1, x2, y2, z2)
@@ -129,9 +124,61 @@ def radial_projection(x1, y1, length, xo=0, yo=0):
 
 #endregion
 
+#region binning functions
+def range_group(df, item_col='item', min_col='min', max_col='max'):
+    # Nick's range group function
+    dfi = df[[item_col, min_col, max_col]]
+    records = dfi.to_records(index=False)
+    list_c = list(records)
+    group = 0
+    groups = {}
+    groups[group] = [list_c[0]]
+    pop_list = []
+    minx = list_c[0][1]
+    maxx = list_c[0][2]
+    list_c.pop(0)
+    while len(list_c) > 0:
+        for i in range(len(list_c)):
+            minx2 = list_c[i][1]
+            maxx2 = list_c[i][2]
+            c1 = minx <= minx2 and maxx >= minx2
+            c2 = minx <= maxx2 and maxx >= maxx2
+            c3 = minx2 <= minx and maxx2 >= minx
+            c4 = minx2 <= maxx and maxx2 >= maxx
+            if c1 or c2 or c3 or c4:
+                if minx2 <= minx:
+                    minx = minx2
+                if maxx2 >= maxx:
+                    maxx = maxx2
+                groups[group].append(list_c[i])
+                pop_list.append(i)
+        if len(pop_list) == 0:
+            group += 1
+            minx = list_c[0][1]
+            maxx = list_c[0][2]
+            groups[group] = [list_c[0]]
+            list_c.pop(0)
+        else:
+            pop_list = sorted(pop_list, reverse=True)
+            for idx in pop_list:
+                if idx < len(list_c):
+                    list_c.pop(idx)
+            pop_list = []
+
+    rows = []
+    for key in groups:
+        for i in range(len(groups[key])):
+            rows.append((key,groups[key][i][0]))
+
+    df_join = pd.DataFrame(rows, columns=['group', 'item'])
+    df_out = df.merge(df_join, on=['item'], how='left')
+    return df_out
+#endregion
+
 #region chord functions
 
-def nicks_chord(x0, y0, x1, y1, x2, y2, points, h_override=0.):
+def chord(x0, y0, x1, y1, x2, y2, points, h_override=0.):
+    # Nick's chord function
     h = line_to_point_distance(x0, y0, x1, y1, x2, y2)
     w = distance_between_two_points(x1, y1, x2, y2)
     if h_override == 0.:
@@ -142,7 +189,7 @@ def nicks_chord(x0, y0, x1, y1, x2, y2, points, h_override=0.):
             h = new_h
     else:
         h = h*h_override
-    a = angle_of_two_points(x1, y1, x2, y2)
+    a = angle_of_two_points(x1, y1, x2, y2) - 90
     xr = []
     yr = []
     for i in range(points+1):
@@ -179,7 +226,8 @@ def __chord_center(x0, y0, z0, x1, y1, z1, x2, y2, z2):
     y2 = b
     return x1, y1, x2, y2
 
-def nicks_chord_3d(x0, y0, z0, x1, y1, z1, x2, y2, z2, points, h_override=0.):
+def chord_3d(x0, y0, z0, x1, y1, z1, x2, y2, z2, points, h_override=0.):
+    # Nick's 3d chord function
     x0 *= 100
     y0 *= 100
     z0 *= 100
@@ -190,7 +238,7 @@ def nicks_chord_3d(x0, y0, z0, x1, y1, z1, x2, y2, z2, points, h_override=0.):
     y2 *= 100
     z2 *= 100
     xc1, yc1, xc2, yc2 = __chord_center(x0, y0, z0, x1, y1, z1, x2, y2, z2)
-    chord_list = nicks_chord(0., 0., xc1, yc1, xc2, yc2, points, h_override)
+    chord_list = chord(0., 0., xc1, yc1, xc2, yc2, points, h_override)
     chord_list_3d = []
     for i in range(len(chord_list)):
         xc = chord_list[i][0]
@@ -280,7 +328,8 @@ def laplacian_of_gaussian_grid(N, n, x, y, sigma, zscale=100000):
 
 #region artistic functions
 
-def nicks_feather(points, sf = 2.0, ef = 2.0, sx = 0.0, ex = 2.0, scale = 25.):
+def feather(points, sf = 2.0, ef = 2.0, sx = 0.0, ex = 2.0, scale = 25.):
+    # Nick's feather function
     xi = np.linspace(1.5, 3.5, num=points)
     x = np.linspace(sx, ex, num=points)
     a = np.linspace(0., 40., num=points)
@@ -309,7 +358,8 @@ def __teardrop_yz(y, miny, maxy, minz, maxz, m, f=1.):
     yts = rescale(yt, 0., 1.0, miny, maxy)
     return yts, zs, a
 
-def nicks_teardrop(list_xy, miny, maxy, minz, maxz):
+def teardrop(list_xy, miny, maxy, minz, maxz):
+    # Nick's teardrop function
     for i in range(len(list_xy)):
         y = list_xy[i].y
         if i==20:
@@ -392,6 +442,18 @@ def sunflower_donut(population, count, start, extent):
     xy = sunflower(population, 1., extent)
     xy_donut = xy[start:start+count]
     return xy_donut
+
+def concentric_spread(radius, arc_length, points, xo=0, yo=0, rotate=0, style=''):
+    # Nick's concentric spread function
+    rr = radians(rotate)
+    angles =  [radians(90) - i * arc_length / radius for i in range(points)]
+    avg_a = rr
+    if style == 'gravity':
+        avg_a += sum(angles) / points + pi/2
+    elif style == 'antigravity':
+        avg_a += sum(angles) / points - pi/2 
+    xy_cs = [[xo + radius * cos(a-avg_a), yo + radius * sin(a-avg_a)] for a in angles]
+    return xy_cs
 
 #endregion
 

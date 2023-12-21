@@ -302,7 +302,7 @@ class crystals:
         self.df[self.height_field] += self.offset
         self.o_crystal_bar_chart.to_dataframe()
 
-    def cbc_plot(self, opacity=0.8):
+    def cbc_plot(self, opacity=0.8, legend=True, alternate_color=False, color=True):
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
         df_lvl_group = self.o_crystal_bar_chart.df.groupby(['id','side'])
@@ -311,19 +311,31 @@ class crystals:
             r = random.random()
             b = random.random()
             g = random.random()
-            color = (r, g, b)
-            axs.plot([], [], color=color, label=i+1)
-            colors.append(color)
+            c = (r, g, b)
+            colors.append(c)
+            if alternate_color:
+                if i % 2 == 0:
+                    if color:
+                        colors[i] = colors[0]
+                    else:
+                        colors[i] = (1,1,1)
+                else:
+                    if color:
+                        colors[i] = colors[1]
+                    else:
+                        colors[i] = (.75,.75,.75)
+            if legend:
+                axs.plot([], [], color=colors[i], label=i+1)
         nested_values = {name: group['group'].iloc[0] for name, group in df_lvl_group}
         sorted_group_names = sorted(nested_values, key=nested_values.get, reverse=False)
-        axs.legend(bbox_to_anchor=(1, 1))
+        if legend:
+            axs.legend(bbox_to_anchor=(1, 1))
         for name in sorted_group_names:
             rows = df_lvl_group.get_group(name)
             x = rows['x'].values
             y = rows['y'].values
             i = rows['group'].values[0]
             axs.fill(x, y, alpha=opacity, fc=colors[i], linewidth=0.5, edgecolor='black')
-        axs.legend()
         plt.show()
 
     def to_df(self):

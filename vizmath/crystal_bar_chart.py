@@ -72,11 +72,6 @@ class crystals:
     def __draw_top(self, list_xy, id, xmin, xmax, ymin, ymax, value, group, height, width):
         y = (ymax-ymin)/2.+ymin
         x = (xmax-xmin)/2.+xmin
-        # list_xy.append(point(id,0,xmin,y,0,value,group,height,width))
-        # list_xy.append(point(id,0,x,ymax,1,value,group,height,width))
-        # list_xy.append(point(id,0,xmax,y,2,value,group,height,width))
-        # list_xy.append(point(id,0,x,ymin,3,value,group,height,width))
-        # list_xy.append(point(id,0,xmin,y,4,value,group,height,width))
         list_xy.append(id=id,x=xmin,y=y,path=0,side=0,value=value,group=group,height=height,width=width)
         list_xy.append(id=id,x=x,y=ymax,path=1,side=0,value=value,group=group,height=height,width=width)
         list_xy.append(id=id,x=xmax,y=y,path=2,side=0,value=value,group=group,height=height,width=width)
@@ -89,21 +84,11 @@ class crystals:
 
         if x >= 0:
             if y >= 0:
-                # list_xy.append(point(id,1,xmin,y,0,value,group,height,width))
-                # list_xy.append(point(id,1,x,ymin,1,value,group,height,width))
-                # list_xy.append(point(id,1,0.,0.,2,value,group,height,width))
-                # list_xy.append(point(id,1,xmin,y,3,value,group,height,width))
-
                 list_xy.append(id=id,x=xmin,y=y,path=0,side=1,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=x,y=ymin,path=1,side=1,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=0.,y=0.,path=2,side=1,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=xmin,y=y,path=3,side=1,value=value,group=group,height=height,width=width)
             else:
-                # list_xy.append(point(id,1,xmin,y,0,value,group,height,width))
-                # list_xy.append(point(id,1,x,ymax,1,value,group,height,width))
-                # list_xy.append(point(id,1,0.,0.,2,value,group,height,width))
-                # list_xy.append(point(id,1,xmin,y,3,value,group,height,width))
-
                 list_xy.append(id=id,x=xmin,y=y,path=0,side=1,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=x,y=ymax,path=1,side=1,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=0.,y=0.,path=2,side=1,value=value,group=group,height=height,width=width)
@@ -115,21 +100,11 @@ class crystals:
                     slope1 = abs(ymin)/abs(x)
                 slope2 = abs(y)/abs(xmin)
                 if slope1 > slope2 and ymin > 0:
-                    # list_xy.append(point(id,1,xmin,y,0,value,group,height,width))
-                    # list_xy.append(point(id,1,x,ymin,1,value,group,height,width))
-                    # list_xy.append(point(id,1,0.,0.,2,value,group,height,width))
-                    # list_xy.append(point(id,1,xmin,y,3,value,group,height,width))
-
                     list_xy.append(id=id,x=xmin,y=y,path=0,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=x,y=ymin,path=1,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=0.,y=0.,path=2,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=xmin,y=y,path=3,side=1,value=value,group=group,height=height,width=width)
                 else:
-                    # list_xy.append(point(id,1,x,ymax,0,value,group,height,width))
-                    # list_xy.append(point(id,1,xmax,y,1,value,group,height,width))
-                    # list_xy.append(point(id,1,0.,0.,2,value,group,height,width))
-                    # list_xy.append(point(id,1,x,ymax,3,value,group,height,width))
-
                     list_xy.append(id=id,x=x,y=ymax,path=0,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=xmax,y=y,path=1,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=0.,y=0.,path=2,side=1,value=value,group=group,height=height,width=width)
@@ -140,21 +115,11 @@ class crystals:
                     slope1 = abs(ymax)/abs(x)
                 slope2 = abs(y)/abs(xmin)
                 if slope1 > slope2 and ymax < 0:
-                    # list_xy.append(point(id,1,xmin,y,0,value,group,height,width))
-                    # list_xy.append(point(id,1,x,ymax,1,value,group,height,width))
-                    # list_xy.append(point(id,1,0.,0.,2,value,group,height,width))
-                    # list_xy.append(point(id,1,xmin,y,3,value,group,height,width))
-
                     list_xy.append(id=id,x=xmin,y=y,path=0,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=x,y=ymax,path=1,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=0.,y=0.,path=2,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=xmin,y=y,path=3,side=1,value=value,group=group,height=height,width=width)
                 else:
-                    # list_xy.append(point(id,1,x,ymin,0,value,group,height,width))
-                    # list_xy.append(point(id,1,xmax,y,1,value,group,height,width))
-                    # list_xy.append(point(id,1,0.,0.,2,value,group,height,width))
-                    # list_xy.append(point(id,1,x,ymin,3,value,group,height,width))
-
                     list_xy.append(id=id,x=x,y=ymin,path=0,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=xmax,y=y,path=1,side=1,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=0.,y=0.,path=2,side=1,value=value,group=group,height=height,width=width)
@@ -170,21 +135,11 @@ class crystals:
                     slope1 = abs(ymin)/abs(x)
                 slope2 = abs(y)/abs(xmax)
                 if slope1 > slope2 and ymin > 0:
-                    # list_xy.append(point(id,2,x,ymin,0,value,group,height,width))
-                    # list_xy.append(point(id,2,xmax,y,1,value,group,height,width))
-                    # list_xy.append(point(id,2,0.,0.,2,value,group,height,width))
-                    # list_xy.append(point(id,2,x,ymin,3,value,group,height,width))
-
                     list_xy.append(id=id,x=x,y=ymin,path=0,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=xmax,y=y,path=1,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=0.,y=0.,path=2,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=x,y=ymin,path=3,side=2,value=value,group=group,height=height,width=width)
                 else:
-                    # list_xy.append(point(id,2,x,ymax,0,value,group,height,width))
-                    # list_xy.append(point(id,2,xmin,y,1,value,group,height,width))
-                    # list_xy.append(point(id,2,0.,0.,2,value,group,height,width))
-                    # list_xy.append(point(id,2,x,ymax,3,value,group,height,width))
-
                     list_xy.append(id=id,x=x,y=ymax,path=0,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=xmin,y=y,path=1,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=0.,y=0.,path=2,side=2,value=value,group=group,height=height,width=width)
@@ -195,42 +150,22 @@ class crystals:
                     slope1 = abs(ymax)/abs(x)
                 slope2 = abs(y)/abs(xmax)
                 if slope1 > slope2 and ymax < 0:
-                    # list_xy.append(point(id,2,x,ymax,0,value,group,height,width))
-                    # list_xy.append(point(id,2,xmax,y,1,value,group,height,width))
-                    # list_xy.append(point(id,2,0.,0.,2,value,group,height,width))
-                    # list_xy.append(point(id,2,x,ymax,3,value,group,height,width))
-
                     list_xy.append(id=id,x=x,y=ymax,path=0,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=xmax,y=y,path=1,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=0.,y=0.,path=2,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=x,y=ymax,path=3,side=2,value=value,group=group,height=height,width=width)
                 else:
-                    # list_xy.append(point(id,2,x,ymin,0,value,group,height,width))
-                    # list_xy.append(point(id,2,xmin,y,1,value,group,height,width))
-                    # list_xy.append(point(id,2,0.,0.,2,value,group,height,width))
-                    # list_xy.append(point(id,2,x,ymin,3,value,group,height,width))
-
                     list_xy.append(id=id,x=x,y=ymin,path=0,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=xmin,y=y,path=1,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=0.,y=0.,path=2,side=2,value=value,group=group,height=height,width=width)
                     list_xy.append(id=id,x=x,y=ymin,path=3,side=2,value=value,group=group,height=height,width=width)
         else:
             if y >= 0:
-                # list_xy.append(point(id,2,x,ymin,0,value,group,height,width))
-                # list_xy.append(point(id,2,xmax,y,1,value,group,height,width))
-                # list_xy.append(point(id,2,0.,0.,2,value,group,height,width))
-                # list_xy.append(point(id,2,x,ymin,3,value,group,height,width))
-
                 list_xy.append(id=id,x=x,y=ymin,path=0,side=2,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=xmax,y=y,path=1,side=2,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=0.,y=0.,path=2,side=2,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=x,y=ymin,path=3,side=2,value=value,group=group,height=height,width=width)
             else:
-                # list_xy.append(point(id,2,x,ymax,0,value,group,height,width))
-                # list_xy.append(point(id,2,xmax,y,1,value,group,height,width))
-                # list_xy.append(point(id,2,0.,0.,2,value,group,height,width))
-                # list_xy.append(point(id,2,x,ymax,3,value,group,height,width))
-
                 list_xy.append(id=id,x=x,y=ymax,path=0,side=2,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=xmax,y=y,path=1,side=2,value=value,group=group,height=height,width=width)
                 list_xy.append(id=id,x=0.,y=0.,path=2,side=2,value=value,group=group,height=height,width=width)
@@ -327,7 +262,7 @@ class crystals:
             if legend:
                 axs.plot([], [], color=colors[i], label=i+1)
         nested_values = {name: group['group'].iloc[0] for name, group in df_lvl_group}
-        sorted_group_names = sorted(nested_values, key=nested_values.get, reverse=False)
+        sorted_group_names = sorted(nested_values, key=nested_values.get, reverse=self.bottom_up)
         if legend:
             axs.legend(bbox_to_anchor=(1, 1))
         for name in sorted_group_names:

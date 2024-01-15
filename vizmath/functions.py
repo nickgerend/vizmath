@@ -69,16 +69,29 @@ def point_along_path(x1, y1, x2, y2, d):
     return x, y
 
 def two_lines_intercept(p0_x, p0_y, p1_x, p1_y, p2_x, p2_y, p3_x, p3_y):
-    s1_x = p1_x - p0_x     
-    s1_y = p1_y - p0_y
-    s2_x = p3_x - p2_x
-    s2_y = p3_y - p2_y
-    t = ( s2_x * (p0_y - p2_y) - s2_y * (p0_x - p2_x)) / (-s2_x * s1_y + s1_x * s2_y)
-    i_x = p0_x + (t * s1_x)
-    i_y = p0_y + (t * s1_y)
-    return i_x, i_y
+    """
+    Compute the intersection point of two lines, if it exists.
+    Line 1 is represented by points (p0_x, p0_y) and (p1_x, p1_y).
+    Line 2 is represented by points (p2_x, p2_y) and (p3_x, p3_y).
+    """
+    xdiff = (p0_x - p1_x, p2_x - p3_x)
+    ydiff = (p0_y - p1_y, p2_y - p3_y)
+
+    def det(a, b):
+        return a[0] * b[1] - a[1] * b[0]
+
+    div = det(xdiff, ydiff)
+    if div == 0:
+        return None # lines do not intersect
+
+    d = (det((p0_x, p0_y), (p1_x, p1_y)), det((p2_x, p2_y), (p3_x, p3_y)))
+    x = det(d, xdiff) / div
+    y = det(d, ydiff) / div
+    return x, y
 
 def line_to_point_distance(x0, y0, x1, y1, x2, y2):
+    # point: x0, y0
+    # line: x1, y1, x2, y2
     n = abs((y1-y2)*x0+(x2-x1)*y0+x1*y2-x2*y1)
     d = sqrt((x2-x1)**2+(y2-y1)**2)
     return n/d
@@ -87,6 +100,11 @@ def distance_between_two_points_3d(x1, y1, z1, x2, y2, z2):
     return sqrt((x2-x1)**2+(y2-y1)**2+(z2-z1)**2)
 
 def rotate(x, y, angledeg, x_offset=0, y_offset=0):
+    if angledeg == 0:
+        xa = x
+        ya = y
+        xa -= x_offset
+        ya -= y_offset
     xa = x*cos(angledeg*pi/180) + y*sin(angledeg*pi/180)
     ya = -x*sin(angledeg*pi/180) + y*cos(angledeg*pi/180)
     xa -= x_offset
@@ -121,6 +139,21 @@ def radial_projection(x1, y1, length, xo=0, yo=0):
     x2 = x1 + length * cos(angle)
     y2 = y1 + length * sin(angle)
     return x2, y2
+
+def is_point_on_line(x0, y0, x1, y1, x2, y2):
+    """
+    Check if point (x0, y0) is on the line segment between points (x1, y1) and (x2, y2).
+    """
+    crossproduct = (y0 - y1) * (x2 - x1) - (x0 - x1) * (y2 - y1)
+    if abs(crossproduct) > 1e-7:
+        return False
+    dotproduct = (x0 - x1) * (x2 - x1) + (y0 - y1) * (y2 - y1)
+    if dotproduct < 0:
+        return False
+    squaredlengthba = (x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)
+    if dotproduct > squaredlengthba:
+        return False
+    return True
 
 #endregion
 
@@ -527,5 +560,49 @@ def circle_collided(x1, y1, x2, y2, r1, r2, tol=10):
     if round(A, tol) < round(B, tol):
         result = True
     return result
+
+#endregion
+
+#region polygon functions
+
+def sort_vertices(polygon):
+    centroid = np.mean(polygon, axis=0)
+    def sort_key(point):
+        return np.arctan2(point[1] - centroid[1], point[0] - centroid[0])
+    return sorted(polygon, key=sort_key)
+
+def is_point_in_convex_polygon(x, y, polygon):
+        def cross_product(o, a, b):
+            return (a[0] - o[0]) * (b[1] - o[1]) - (a[1] - o[1]) * (b[0] - o[0])
+        def is_left_turn(p, q, r):
+            return cross_product(p, q, r) > 0
+        n = len(polygon)
+        if n < 3:
+            return False  # not a polygon
+        sorted_polygon = sort_vertices(polygon)
+        # check for each edge if the point is on the same side
+        for i in range(n):
+            if not is_left_turn(sorted_polygon[i], sorted_polygon[(i + 1) % n], (x, y)):
+                return False
+        return True
+
+def line_polygon_intercepts(x1, y1, x2, y2, polygon):
+    """
+    Find intersection points between a line (represented by points (x1, y1) and (x2, y2))
+    and a polygon (represented as a list of (x, y) points).
+    """
+    sorted_polygon = sort_vertices(polygon)
+    intersections = []
+    for i in range(len(sorted_polygon)):
+        p1 = sorted_polygon[i]
+        p2 = sorted_polygon[(i + 1) % len(sorted_polygon)]
+        try:
+            intersect_x, intersect_y = two_lines_intercept(x1, y1, x2, y2, p1[0], p1[1], p2[0], p2[1])
+            # check if the intercept is on both the line segment of the polygon edge and the given line
+            if is_point_on_line(intersect_x, intersect_y, p1[0], p1[1], p2[0], p2[1]):
+                intersections.append((intersect_x, intersect_y))
+        except:
+            pass  # lines are parallel, no intersection
+    return intersections
 
 #endregion

@@ -1,4 +1,6 @@
 #%%
+# Nick's Quad-Tile Chart
+
 import pandas as pd
 from math import sqrt, inf
 import copy
@@ -7,6 +9,7 @@ import random
 import string
 import numpy as np
 from scipy.spatial import ConvexHull
+from IPython.display import display
 
 from . import functions as vf
 from .draw import points as dp
@@ -528,8 +531,9 @@ class polyquadtile:
         # check the top side of the square to see if the points are within the polygon
         top1 = vf.is_point_in_convex_polygon(segment.x, segment.y+w, poly)
         top2 = vf.is_point_in_convex_polygon(segment.x+w, segment.y+w, poly)
+        bottom2 = vf.is_point_in_convex_polygon(segment.x+w, segment.y, poly)
         # split the segment into 2 new ones after setting the square (or 1 new one if there's complete overlap)
-        if top1 and top2 and w <= segment.length and segment.y+w <= segment.height: # checking segment height for under-bridge segments
+        if top1 and top2 and bottom2 and w <= segment.length and segment.y+w <= segment.height: # checking segment height for under-bridge segments
             placed = True
             if segment.y == lvl:
                 lvl_h = segment.y+w
@@ -711,27 +715,7 @@ class polyquadtile:
         side = self.sides[0]
         i = 0
 
-        #region debugging
-        # fig, axs = plt.subplots()
-        # axs.set_aspect('equal', adjustable='box')
-        # x_sorted_polygon, y_sorted_polygon = zip(*poly_quad[side])
-        # x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
-        # y_sorted_polygon += (y_sorted_polygon[0],)
-        # axs.plot(x_sorted_polygon, y_sorted_polygon, 'b-')
-        # axs.fill(x_sorted_polygon, y_sorted_polygon, 'skyblue', alpha=0.3)
-        # display(fig)
-        # plt.show()
-        #endregion
-
         while i < len(widths):
-
-            #region debugging
-            # if i == 3:
-            #     print('debug')
-
-            # if next((s for s in side_dict[side]['segments'] if s.x == 4.717317018950091 and s.y ==1.635081752286866), None) is not None:
-            #     print('debug')
-            #endregion
 
             w = widths[i]
             id = ids[i]
@@ -745,7 +729,37 @@ class polyquadtile:
                 
                 segment = sorted_segments[j]
                 seg_idx = next((i for i, s in enumerate(side_dict[side]['segments']) if s == segment), None)
-                placed, side_dict[side]['lvl_h'] = self.__place(side_dict[side]['segments'], segment, seg_idx, w, poly_quad[side], side_dict[side]['lvl'], side_dict[side]['lvl_h']) # place square if possible
+                segments = side_dict[side]['segments']
+                placed, side_dict[side]['lvl_h'] = self.__place(segments, segment, seg_idx, w, poly_quad[side], side_dict[side]['lvl'], side_dict[side]['lvl_h']) # place square if possible
+                # placed, side_dict[side]['lvl_h'] = self.__place_collapse(segments, segment, seg_idx, w, poly_quad[side], side_dict[side]['lvl'], side_dict[side]['lvl_h'], self.collapse) # place square if possible
+
+                #region collapse
+                # check to see if any segments coencide with the new (left-most) segment, if so, combine
+                if self.collapse:
+                    new_left_segment = segments[seg_idx]
+                    extend_segment = max((s for s in segments if s.x+s.length == new_left_segment.x and new_left_segment.y == s.y), key=lambda s: s.x, default=None)
+                    if extend_segment is not None: # extend a connected segment
+                        extend_segment.length += new_left_segment.length
+                        segments.pop(seg_idx)
+                    else: # look for a square to the left
+                        # find closest square from the left side and check if the new segment's y value happens to align with an existing closest segment
+                        left_square = max((s for s in self.o_polysquares.viz if s.side == side and s.x+s.w <= new_left_segment.x and s.y <= new_left_segment.y and s.y+s.w >= new_left_segment.y), key=lambda s: s.x, default=None)
+                        if left_square is not None:
+                            if left_square.x + left_square.w < new_left_segment.x: # gap exists, abs(left_square.x + left_square.w - segment.x) > 10e-12
+                                covered_segment = max((s for s in segments if s.y == left_square.y and s.x < new_left_segment.x), key=lambda s: s.x, default=None)
+                                if covered_segment is not None:
+                                    merge_segment = max((s for s in segments if s.x+s.length+covered_segment.length == new_left_segment.x and new_left_segment.y == s.y), key=lambda s: s.x, default=None)
+                                    # set a height for the covered segment
+                                    covered_segment.height = w
+                                    if merge_segment is not None:
+                                        # extend the existing segment
+                                        merge_segment.length += w + covered_segment.length
+                                        segments.pop(seg_idx)
+                                    else:
+                                        # lengthen the current sections
+                                        new_left_segment.x = left_square.x + left_square.w
+                                        new_left_segment.length += covered_segment.length
+                #endregion
 
                 if segment == last_lvl_segment and not placed and side_dict[side]['lvl'] != side_dict[side]['lvl_h']: # create a bridge segment
                     last_lvl_segment.height = side_dict[side]['lvl_h'] # set a threshold for the under-bridge segment
@@ -762,22 +776,6 @@ class polyquadtile:
                     # add square
                     self.__add_square(list_xy, i+1, id, segment.x, segment.y, w, a, side)
                     side_dict[side]['no_room'] = False
-
-                    #region degbugging:
-                    # square_plot = [s for s in list_xy.viz if s.item == id]
-                    # xp = [s.x for s in square_plot]
-                    # yp = [s.y for s in square_plot]
-                    # r = random.random()
-                    # b = random.random()
-                    # g = random.random()
-                    # cp = (r, g, b)
-                    # set_linewidth=0.5
-                    # axs.plot(xp, yp, 'k-', linewidth=set_linewidth)
-                    # axs.fill(xp, yp, 'skyblue', alpha=0.3)
-                    # display(fig)
-                    # plt.show()
-                    #endregion
-
                     if j+1 == len(sorted_segments): # last segment
                         [setattr(s, 'active', True) for s in side_dict[side]['segments']] # reset all to active
                     i += 1 # move on to the next square
@@ -873,7 +871,9 @@ class polyquadtile:
     def auto_polyquadtile_chart(self, max_iter=20, min_value=0.0001, max_value=20.):
         df = self.df
         val_f = self.value_field
-        df['apqt_norm_i'] = df[val_f].apply(lambda x: 0.01 + 0.99 * (x - df[val_f].min()) / (df[val_f].max() - df[val_f].min()))
+        # transform the values to > 0 and <=1
+        val_max = df[val_f].max()
+        df['apqt_norm_i'] = df[val_f].apply(lambda x: x / val_max)
         squares = len(df)
         # bisect to find the right multiplier
         i = 1

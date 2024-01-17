@@ -6,6 +6,7 @@ from math import inf, pi, sqrt
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+import string
 
 from . import functions as vf
 from .draw import points as dp
@@ -16,7 +17,7 @@ from .draw import points as dp
 class swarm():
 
     def __init__(self, df, id_field, position_field, size_field=None, 
-        buffer=0., size_override=None, rotation=0):
+        buffer=0., size_override=None, rotation=0, tol_overlap=8):
 
         self.df = df
         self.id_field = id_field
@@ -25,9 +26,16 @@ class swarm():
         self.buffer = buffer
         self.size_override = size_override
         self.rotation = rotation
+        self.tol_overlap = tol_overlap
 
         self.o_beeswarm = None
         self.beeswarm()
+
+    @classmethod
+    def random_swarm(cls, size, buffer=0.5, rotate=45.):
+        data = [[''.join(random.choices(string.ascii_letters, k=5)), random.randint(1, 1000), random.randint(1, 1000)] for _ in range(size)]
+        df = pd.DataFrame(data, columns=['id', 'value', 'size'])
+        return cls(df, 'id', 'value', size_field='size')
 
     def beeswarm(self):
         self.df['item'] = self.df[self.id_field]
@@ -83,9 +91,9 @@ class swarm():
                             xk = dict_groups[group][k][0]
                             yk = dict_groups[group][k][1]
                             rk = dict_groups[group][k][2]
-                            if vf.circle_collided(xk, yk, x, yt, rk, r):
+                            if vf.circle_collided(xk, yk, x, yt, rk, r, self.tol_overlap):
                                 ytest[0] = None
-                            if vf.circle_collided(xk, yk, x, yb, rk, r):
+                            if vf.circle_collided(xk, yk, x, yb, rk, r, self.tol_overlap):
                                 ytest[1] = None
                             if ytest[0] == None and ytest[1] == None:
                                 collided = True

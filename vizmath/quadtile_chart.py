@@ -2,14 +2,13 @@
 # Nick's Quad-Tile Chart
 
 import pandas as pd
-from math import sqrt, inf
+from math import sqrt, inf, pi
 import copy
 import matplotlib.pyplot as plt
 import random
 import string
 import numpy as np
 from scipy.spatial import ConvexHull
-from IPython.display import display
 
 from . import functions as vf
 from .draw import points as dp
@@ -424,7 +423,7 @@ class polyquadtile:
 
     def __init__(self, df, id_field, value_field, xo=0., yo=0., 
             buffer=0.05, rotate=45., constraints=None, sides=['top','right','bottom','left'],
-            collapse=False, auto=True, auto_max_iter=20, auto_min_val=0.0001, auto_max_val=20.):
+            collapse=False, auto=True, auto_max_iter=20, auto_min_val=0.0001, auto_max_val=20., xc=0., yc=0.):
         
         self.df = df
         self.id_field = id_field
@@ -435,8 +434,15 @@ class polyquadtile:
         self.rotate = rotate
         self.sides = sides
         self.collapse = collapse
-        if constraints is not None:
+        if constraints is None:
+            self.constraints = vf.rectangle(2,1,-45, x_offset=xc, y_offset=yc)
+        elif len(constraints) == 1:
+            cw = constraints[0][0]
+            ch = constraints[0][1]
+            self.constraints = vf.rectangle(cw,ch,-1.*rotate, x_offset=xc, y_offset=yc)
+        else:
             self.constraints = vf.sort_vertices(constraints)
+            self.constraints += np.array([xc, yc])
 
         self.o_polyquadtile_chart = None
         self.o_polysquares = dp()
@@ -487,13 +493,14 @@ class polyquadtile:
         return adjusted_polygon
 
     @classmethod
-    def random_polyquadtile(cls, size, xo=0., yo=0., buffer=0.05, rotate=45., sides=['top','right','bottom','left'],
-            collapse=False, auto=True, auto_max_iter=20, auto_min_val=0.0001, auto_max_val=20.):
+    def random_polyquadtile(cls, size, xo=0., yo=0., buffer=0.05, rotate=45., constraints=None, sides=['top','right','bottom','left'],
+            collapse=False, auto=True, auto_max_iter=20, auto_min_val=0.0001, auto_max_val=20., xc=0., yc=0.):
         data = [[''.join(random.choices(string.ascii_letters, k=5)), random.randint(1, 1000)] for _ in range(size)]
         df = pd.DataFrame(data, columns=['id', 'value'])
-        poly = cls.__generate_random_convex_polygon()
-        return cls(df, 'id', 'value', xo=xo, yo=yo, buffer=buffer, rotate=rotate, constraints=poly, sides=sides,
-            collapse=collapse, auto=auto, auto_max_iter=auto_max_iter, auto_min_val=auto_min_val, auto_max_val=auto_max_val)
+        if constraints is None:
+            constraints = cls.__generate_random_convex_polygon()
+        return cls(df, 'id', 'value', xo=xo, yo=yo, buffer=buffer, rotate=rotate, constraints=constraints, sides=sides,
+            collapse=collapse, auto=auto, auto_max_iter=auto_max_iter, auto_min_val=auto_min_val, auto_max_val=auto_max_val, xc=xc, yc=yc)
 
     def __seg_len_to_ploy(self, x, y, poly):
         x0 = -1
@@ -907,39 +914,57 @@ class polyquadtile:
             self.polyquadtile_chart(df, 'apqt_norm', self.rotate)
             squares_fit = len(self.o_polysquares.viz)
 
-    def polyquadtile_plot(self, opacity=0.5, show_constraints=False, polygon=None):
+    def polyquadtile_plot(self, opacity=0.5, show_constraints=False, polygon=None,
+            color='w', poly_color='skyblue', poly_line='b-', suqares_off=False, circles=False):
         colors = {}
         sides = {0:'center', 1:'top', 2:'right', 3:'bottom', 4:'left'}
         for i in range(5):
             r = random.random()
             b = random.random()
             g = random.random()
-            color = (r, g, b)
-            colors[sides[i]] = color
+            rc = (r, g, b)
+            colors[sides[i]] = rc
         df_lvl_group = self.o_polyquadtile_chart.df.groupby(['item'])
+        centroids = self.o_polysquares.viz
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
-        for group, rows in df_lvl_group:
-            x = rows['x'].values
-            y = rows['y'].values
-            c = colors[rows['side'].values[0]]
-            set_linewidth=0.5
-            axs.fill(x, y, alpha=opacity, fc=c)
-            plt.plot(x, y, 'k-', linewidth=set_linewidth)
+        c = color
+        if not suqares_off:
+            for group, rows in df_lvl_group:
+                x = rows['x'].values
+                y = rows['y'].values
+                if color == 'random':
+                    c = colors[rows['side'].values[0]]
+                set_linewidth = 0.75
+                side = rows['side'].values[0]
+                if side == 'center':
+                    set_linewidth = 2
+                axs.fill(x, y, alpha=opacity, fc=c)
+                plt.plot(x, y, 'k-', linewidth=set_linewidth)
+        if circles:
+            for c in centroids:
+                x = c.x
+                y = c.y
+                r = sqrt(c.a)/2.
+                set_linewidth = 0.75
+                if c.side == 'center':
+                    set_linewidth = 2
+                circle = plt.Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
+                axs.add_patch(circle)
         if show_constraints:
             sorted_polygon = self.constraints
             x_sorted_polygon, y_sorted_polygon = zip(*sorted_polygon)
             x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
             y_sorted_polygon += (y_sorted_polygon[0],)
-            plt.plot(x_sorted_polygon, y_sorted_polygon, 'b-', label='Sorted Polygon')
-            plt.fill(x_sorted_polygon, y_sorted_polygon, 'skyblue', alpha=0.3)
+            plt.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
+            plt.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
         if polygon is not None:
             sorted_polygon = vf.sort_vertices(polygon)
             x_sorted_polygon, y_sorted_polygon = zip(*sorted_polygon)
             x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
             y_sorted_polygon += (y_sorted_polygon[0],)
-            plt.plot(x_sorted_polygon, y_sorted_polygon, 'b-', label='Sorted Polygon')
-            plt.fill(x_sorted_polygon, y_sorted_polygon, 'skyblue', alpha=0.3)
+            plt.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
+            plt.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
         plt.show(block=True)
 
     def to_df(self):

@@ -335,7 +335,7 @@ def heart_3d(N=1.5, n=500):
     Zout_x0 = np.concatenate([Zout1_x0, Zout2_x0])
     Zout_y0 = np.concatenate([Zout1_y0, Zout2_y0])
 
-    zip(Yout,Xout,Zout,Zout_x0,Zout_y0)
+    return zip(Yout,Xout,Zout,Zout_x0,Zout_y0)
 
 #endregion
 

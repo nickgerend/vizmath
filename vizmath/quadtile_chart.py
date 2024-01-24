@@ -9,6 +9,7 @@ import random
 import string
 import numpy as np
 from scipy.spatial import ConvexHull
+from matplotlib.path import Path
 
 from . import functions as vf
 from .draw import points as dp
@@ -18,7 +19,9 @@ from .draw import points as dp
 
 class quadtile:
 
-    def __init__(self, df, id_field, value_field, xo=0., yo=0., packing='auto', overflow=6, buffer=0.5, rotate=45., constraints=None):
+    def __init__(self, df, id_field, value_field, xo=0., yo=0., packing='auto', overflow=6,
+        buffer=0.5, rotate=45., constraints=None, size_by='area', poly_sort=False):
+        
         self.df = df
         self.id_field = id_field
         self.value_field = value_field
@@ -28,18 +31,24 @@ class quadtile:
         self.overflow = overflow
         self.buffer = buffer
         self.rotate = rotate
+        self.constraints = constraints
         if constraints is not None:
-            self.constraints = vf.sort_vertices(constraints)
+            if poly_sort:
+                self.constraints = vf.sort_vertices(constraints)
 
         self.o_quadtile_chart = None
         self.o_squares = dp()
+        if size_by == 'width':
+            self.df[value_field] = self.df[value_field]**2
         self.quadtile_chart()
+        if size_by == 'width':
+            self.df[value_field] = self.df[value_field]**0.5
     
     @classmethod
-    def random_quadtile(cls, size, buffer=0.5, rotate=45.):
+    def random_quadtile(cls, size, xo=0., yo=0., packing='auto', overflow=6, buffer=0.5, rotate=45., constraints=None):
         data = [[''.join(random.choices(string.ascii_letters, k=5)), random.randint(1, 1000)] for _ in range(size)]
         df = pd.DataFrame(data, columns=['id', 'value'])
-        return cls(df, 'id', 'value', buffer=buffer, rotate=rotate)
+        return cls(df, 'id', 'value', xo=xo, yo=yo, packing=packing, overflow=overflow, buffer=buffer, rotate=rotate, constraints=constraints)
 
     class __line:
         def __init__(self, index, x1, y1, x2, y2): 
@@ -63,7 +72,7 @@ class quadtile:
         index += 1
         list_xy.append(id=index, x=x, y=y, path=4, index=index, item=i, w=w, a=a, side=side)
         index += 1
-        self.o_squares.append(id=i, x=x, y=y, path=0, w=w, a=a, side=side)
+        self.o_squares.append(id=i, x=x+w/2, y=y+w/2, path=0, w=w, a=a, side=side)
 
     def __max_packing(self, side, i, overflow, list_xy, w1):
         # find max and pick another
@@ -369,50 +378,76 @@ class quadtile:
             if path_counter == 4:
                 o.x -= buffer
                 o.y += buffer
+            o.x -= w1/2
+            o.y -= w1/2
             xa, ya = vf.rotate(o.x, o.y, self.rotate, 0., 0.)
             o.x = xa
             o.y = ya
             path_counter += 1
+        for o in self.o_squares.viz:
+            o.x -= w1/2
+            o.y -= w1/2
+            xa, ya = vf.rotate(o.x, o.y, self.rotate)
+            o.x = xa
+            o.y = ya
+        rotated_polygon = []
+        if self.constraints is not None:
+            for o in self.constraints:
+                xc, yc = vf.rotate(o[0], o[1], self.rotate)
+                rotated_polygon.append((xc+self.xo, yc+self.yo))
+            self.constraints = rotated_polygon
         #endregion
 
         self.o_quadtile_chart = list_xy
         self.o_quadtile_chart.to_dataframe()
 
-    def quadtile_plot(self, opacity=0.5, show_constraints=False, polygon=None):
-        colors = {}
-        sides = {0:'center', 1:'top', 2:'right', 3:'bottom', 4:'left'}
-        for i in range(5):
-            r = random.random()
-            b = random.random()
-            g = random.random()
-            color = (r, g, b)
-            colors[sides[i]] = color
+    def quadtile_plot(self, opacity=0.5, show_constraints=False, polygon=None,
+        color='w', poly_color='skyblue', poly_line='b-', suqares_off=False, circles=False, cw=2):
+        colors = {'center':'#E7E6E6', 'top':'#87B8F8', 'right':'#E6AFAB', 'bottom':'#A5FFF6', 'left':'#EBC099'}
         df_lvl_group = self.o_quadtile_chart.df.groupby(['item'])
+        centroids = self.o_squares.viz
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
-        for group, rows in df_lvl_group:
-            x = rows['x'].values
-            y = rows['y'].values
-            c = colors[rows['side'].values[0]]
-            set_linewidth=0.5
-            axs.fill(x, y, alpha=opacity, fc=c)
-            plt.plot(x, y, 'k-', linewidth=set_linewidth)
+        c = color
+        if not suqares_off:
+            for group, rows in df_lvl_group:
+                x = rows['x'].values
+                y = rows['y'].values
+                if color == 'quad':
+                    c = colors[rows['side'].values[0]]
+                set_linewidth = 0.75
+                side = rows['side'].values[0]
+                if side == 'center':
+                    set_linewidth = cw
+                axs.fill(x, y, alpha=opacity, fc=c)
+                plt.plot(x, y, 'k-', linewidth=set_linewidth)
+        if circles:
+            for c in centroids:
+                x = c.x
+                y = c.y
+                r = sqrt(c.a)/2.
+                set_linewidth = 0.75
+                if c.side == 'center':
+                    set_linewidth = cw
+                circle = plt.Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
+                axs.add_patch(circle)
         if show_constraints:
-            sorted_polygon = self.constraints
-            x_sorted_polygon, y_sorted_polygon = zip(*sorted_polygon)
-            x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
-            y_sorted_polygon += (y_sorted_polygon[0],)
-            plt.plot(x_sorted_polygon, y_sorted_polygon, 'b-', label='Sorted Polygon')
-            plt.fill(x_sorted_polygon, y_sorted_polygon, 'skyblue', alpha=0.3)
+            if self.constraints is not None:
+                sorted_polygon = self.constraints
+                x_sorted_polygon, y_sorted_polygon = zip(*sorted_polygon)
+                x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
+                y_sorted_polygon += (y_sorted_polygon[0],)
+                plt.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
+                plt.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
         if polygon is not None:
             sorted_polygon = vf.sort_vertices(polygon)
             x_sorted_polygon, y_sorted_polygon = zip(*sorted_polygon)
             x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
             y_sorted_polygon += (y_sorted_polygon[0],)
-            plt.plot(x_sorted_polygon, y_sorted_polygon, 'b-', label='Sorted Polygon')
-            plt.fill(x_sorted_polygon, y_sorted_polygon, 'skyblue', alpha=0.3)
+            plt.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
+            plt.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
         plt.show(block=True)
-
+    
     def to_df(self):
         return self.o_quadtile_chart.df
 
@@ -423,7 +458,8 @@ class polyquadtile:
 
     def __init__(self, df, id_field, value_field, xo=0., yo=0., 
             buffer=0.05, rotate=45., constraints=None, sides=['top','right','bottom','left'],
-            collapse=False, auto=True, auto_max_iter=20, auto_min_val=0.0001, auto_max_val=20., xc=0., yc=0.):
+            collapse=False, auto=True, auto_max_iter=20, auto_min_val=0.0001, auto_max_val=20.,
+            xc=0., yc=0., size_by='area', poly_sort=False):
         
         self.df = df
         self.id_field = id_field
@@ -441,12 +477,17 @@ class polyquadtile:
             ch = constraints[0][1]
             self.constraints = vf.rectangle(cw,ch,-1.*rotate, x_offset=xc, y_offset=yc)
         else:
-            self.constraints = vf.sort_vertices(constraints)
+            if poly_sort:
+                self.constraints = vf.sort_vertices(constraints)
+            else:
+                self.constraints = constraints
             self.constraints += np.array([xc, yc])
 
         self.o_polyquadtile_chart = None
         self.o_polysquares = dp()
         self.multiplier = 1.
+        if size_by == 'width':
+            self.df[value_field] = self.df[value_field]**2
         if len(df) < 3:
             qt = quadtile(df, id_field, value_field, xo, yo, buffer=buffer,
                 rotate=rotate, constraints=constraints)
@@ -457,6 +498,8 @@ class polyquadtile:
                 self.auto_polyquadtile_chart(auto_max_iter, auto_min_val, auto_max_val)
             else:
                 self.polyquadtile_chart(df, value_field, rotate)
+        if size_by == 'width':
+            self.df[value_field] = self.df[value_field]**0.5
 
     @classmethod
     def __angle_between(cls, p1, p2, p3):
@@ -536,11 +579,23 @@ class polyquadtile:
     def __place(self, segments, segment, seg_idx, w, poly, lvl, lvl_h):
         placed = False
         # check the top side of the square to see if the points are within the polygon
-        top1 = vf.is_point_in_convex_polygon(segment.x, segment.y+w, poly)
-        top2 = vf.is_point_in_convex_polygon(segment.x+w, segment.y+w, poly)
-        bottom2 = vf.is_point_in_convex_polygon(segment.x+w, segment.y, poly)
+        # convex polygon method:
+        # top1 = vf.is_point_in_convex_polygon(segment.x, segment.y+w, poly)
+        # top2 = vf.is_point_in_convex_polygon(segment.x+w, segment.y+w, poly)
+        # bottom2 = vf.is_point_in_convex_polygon(segment.x+w, segment.y, poly)
+        # for convex and concave polygons:
+        path = Path(poly) # TODO: eliminate overhead of multiple calls
+        top1 = path.contains_point((segment.x, segment.y+w))
+        top2 = path.contains_point((segment.x+w, segment.y+w))
+        bottom2 = path.contains_point((segment.x+w, segment.y))
+        # extra resolution for concave polygons:
+        top_5 = path.contains_point((segment.x, segment.y+w/2))
+        top1_5 = path.contains_point((segment.x+w/2, segment.y+w))
+        top2_5 = path.contains_point((segment.x+w, segment.y+w/2))
+
         # split the segment into 2 new ones after setting the square (or 1 new one if there's complete overlap)
-        if top1 and top2 and bottom2 and w <= segment.length and segment.y+w <= segment.height: # checking segment height for under-bridge segments
+        # if top1 and top2 and bottom2 and w <= segment.length and segment.y+w <= segment.height: # checking segment height for under-bridge segments
+        if top1 and top2 and bottom2 and top_5 and top1_5 and top2_5 and w <= segment.length and segment.y+w <= segment.height: # checking segment height for under-bridge segments
             placed = True
             if segment.y == lvl:
                 lvl_h = segment.y+w
@@ -738,9 +793,8 @@ class polyquadtile:
                 seg_idx = next((i for i, s in enumerate(side_dict[side]['segments']) if s == segment), None)
                 segments = side_dict[side]['segments']
                 placed, side_dict[side]['lvl_h'] = self.__place(segments, segment, seg_idx, w, poly_quad[side], side_dict[side]['lvl'], side_dict[side]['lvl_h']) # place square if possible
-                # placed, side_dict[side]['lvl_h'] = self.__place_collapse(segments, segment, seg_idx, w, poly_quad[side], side_dict[side]['lvl'], side_dict[side]['lvl_h'], self.collapse) # place square if possible
 
-                #region collapse
+                #region collapse (TODO: potential for floating point math issues with equality)
                 # check to see if any segments coencide with the new (left-most) segment, if so, combine
                 if self.collapse:
                     new_left_segment = segments[seg_idx]
@@ -915,15 +969,8 @@ class polyquadtile:
             squares_fit = len(self.o_polysquares.viz)
 
     def polyquadtile_plot(self, opacity=0.5, show_constraints=False, polygon=None,
-            color='w', poly_color='skyblue', poly_line='b-', suqares_off=False, circles=False):
-        colors = {}
-        sides = {0:'center', 1:'top', 2:'right', 3:'bottom', 4:'left'}
-        for i in range(5):
-            r = random.random()
-            b = random.random()
-            g = random.random()
-            rc = (r, g, b)
-            colors[sides[i]] = rc
+            color='w', poly_color='skyblue', poly_line='b-', suqares_off=False, circles=False, cw=2):
+        colors = {'center':'#E7E6E6', 'top':'#87B8F8', 'right':'#E6AFAB', 'bottom':'#A5FFF6', 'left':'#EBC099'}
         df_lvl_group = self.o_polyquadtile_chart.df.groupby(['item'])
         centroids = self.o_polysquares.viz
         fig, axs = plt.subplots()
@@ -933,12 +980,12 @@ class polyquadtile:
             for group, rows in df_lvl_group:
                 x = rows['x'].values
                 y = rows['y'].values
-                if color == 'random':
+                if color == 'quad':
                     c = colors[rows['side'].values[0]]
                 set_linewidth = 0.75
                 side = rows['side'].values[0]
                 if side == 'center':
-                    set_linewidth = 2
+                    set_linewidth = cw
                 axs.fill(x, y, alpha=opacity, fc=c)
                 plt.plot(x, y, 'k-', linewidth=set_linewidth)
         if circles:
@@ -948,7 +995,7 @@ class polyquadtile:
                 r = sqrt(c.a)/2.
                 set_linewidth = 0.75
                 if c.side == 'center':
-                    set_linewidth = 2
+                    set_linewidth = cw
                 circle = plt.Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
                 axs.add_patch(circle)
         if show_constraints:

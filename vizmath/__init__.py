@@ -1,5 +1,5 @@
 # __init__.py
-__version__ = "0.0.19"
+__version__ = "0.0.20"
 from vizmath.functions import *
 from vizmath.draw import *
 from vizmath.radial_treemap import *

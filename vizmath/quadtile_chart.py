@@ -402,14 +402,14 @@ class quadtile:
         self.o_quadtile_chart.to_dataframe()
 
     def quadtile_plot(self, opacity=0.5, show_constraints=False, polygon=None,
-        color='w', poly_color='skyblue', poly_line='b-', suqares_off=False, circles=False, cw=2):
+        color='w', poly_color='skyblue', poly_line='b-', squares_off=False, circles=False, cw=2):
         colors = {'center':'#E7E6E6', 'top':'#87B8F8', 'right':'#E6AFAB', 'bottom':'#A5FFF6', 'left':'#EBC099'}
         df_lvl_group = self.o_quadtile_chart.df.groupby(['item'])
         centroids = self.o_squares.viz
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
         c = color
-        if not suqares_off:
+        if not squares_off:
             for group, rows in df_lvl_group:
                 x = rows['x'].values
                 y = rows['y'].values
@@ -969,14 +969,14 @@ class polyquadtile:
             squares_fit = len(self.o_polysquares.viz)
 
     def polyquadtile_plot(self, opacity=0.5, show_constraints=False, polygon=None,
-            color='w', poly_color='skyblue', poly_line='b-', suqares_off=False, circles=False, cw=2):
+            color='w', poly_color='skyblue', poly_line='b-', squares_off=False, circles=False, cw=2):
         colors = {'center':'#E7E6E6', 'top':'#87B8F8', 'right':'#E6AFAB', 'bottom':'#A5FFF6', 'left':'#EBC099'}
         df_lvl_group = self.o_polyquadtile_chart.df.groupby(['item'])
         centroids = self.o_polysquares.viz
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
         c = color
-        if not suqares_off:
+        if not squares_off:
             for group, rows in df_lvl_group:
                 x = rows['x'].values
                 y = rows['y'].values

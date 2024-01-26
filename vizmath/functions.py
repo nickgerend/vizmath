@@ -605,20 +605,7 @@ def line_polygon_intercepts(x1, y1, x2, y2, polygon):
             pass  # lines are parallel, no intersection
     return intersections
 
-def rectangle(width, height, rotation=0, area=50, x_offset=0, y_offset=0):
-    """
-    Create a rotated rectangle with given width, height, rotation, and area, 
-    centered at coordinates (0,0).
-
-    Args:
-    width (float): Width of the rectangle.
-    height (float): Height of the rectangle.
-    rotation (float): Rotation of the rectangle in degrees.
-    area (float): The area of the rectangle.
-
-    Returns:
-    np.ndarray: Coordinates of the rectangle's vertices after rotation.
-    """
+def rectangle(width, height, rotate=0, area=50, x_offset=0, y_offset=0):
     # adjust width and height according to the specified area
     scale_factor = (area / (width * height)) ** 0.5
     width *= scale_factor
@@ -631,11 +618,11 @@ def rectangle(width, height, rotation=0, area=50, x_offset=0, y_offset=0):
         [width / 2, -height / 2]
     ])
     rectangle += np.array([x_offset, y_offset])
-    if rotation == 0:
+    if rotate == 0:
         return rectangle
     else:
         # rotation matrix
-        theta = np.radians(rotation)
+        theta = np.radians(rotate)
         rotation_matrix = np.array([
             [np.cos(theta), -np.sin(theta)],
             [np.sin(theta), np.cos(theta)]
@@ -643,5 +630,15 @@ def rectangle(width, height, rotation=0, area=50, x_offset=0, y_offset=0):
         # rotated rectangle
         rotated_rectangle = np.dot(rectangle, rotation_matrix)
         return rotated_rectangle
+
+def rotate_polygon(polygon, rotate):
+    angle_radians = radians(rotate)
+    rotated_polygon = []
+    for x, y in polygon:
+        # rotate point
+        rotated_x = x * cos(angle_radians) - y * sin(angle_radians)
+        rotated_y = x * sin(angle_radians) + y * cos(angle_radians)
+        rotated_polygon.append((rotated_x, rotated_y))
+    return rotated_polygon
 
 #endregion

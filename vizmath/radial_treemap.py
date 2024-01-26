@@ -3,7 +3,7 @@
 
 import pandas as pd
 import numpy as np
-from math import pi, cos, sin, sqrt
+from math import pi, cos, sin, sqrt, log
 import random
 import matplotlib.pyplot as plt
 import copy
@@ -39,6 +39,64 @@ class rad_treemap:
 
         self.o_rad_treemap = None
         self.rad_treemap()
+
+    @classmethod
+    def __generate_hierarchical_data(cls, num_levels=3, num_top_level_items=10, items_range=(2,5), value_range=(1,100), 
+        outlier_fraction=0.2, use_log=True, sig=100):
+    
+        data = []
+        min_val, max_val = value_range
+        min_items, max_items = items_range
+        # adjust the value range for each top-level item to add more variability
+        top_level_ranges = [(random.uniform(min_val, max_val/2), random.uniform(max_val/2, max_val)) for _ in range(num_top_level_items)]
+
+        def generate_value(current_range):
+            # decide if the value should be an outlier
+            if random.random() < outlier_fraction:
+                value_range = current_range
+            else:
+                value_range = (current_range[0], current_range[0] + (current_range[1] - current_range[0]) * (1 - outlier_fraction))
+            # generate value based on specified distribution
+            if use_log:
+                mean = (log(value_range[0]) + log(value_range[1])) / 2
+                sigma = (log(value_range[1]) - mean) / sig
+                return random.lognormvariate(mean, sigma)
+            else:
+                return random.uniform(*value_range)
+
+        def create_rows(prefix, level_idx):
+            if level_idx == num_levels:
+                # determine the value range based on the top level
+                current_range = top_level_ranges[int(prefix[0][1:]) - 1] if level_idx > 1 else value_range
+                value = generate_value(current_range)
+                data.append(prefix + [value])
+            else:
+                for item in range(random.randint(min_items, max_items) if level_idx > 0 else num_top_level_items):
+                    create_rows(prefix + [f'{chr(97 + level_idx)}{item + 1}'], level_idx + 1)
+
+        create_rows([], 0)
+        headers = [chr(97 + i) for i in range(num_levels)] + ['value']
+        df = pd.DataFrame(data, columns = headers)
+        return df
+
+    @classmethod
+    def random_rad_treemap(cls, num_levels=3, num_top_level_items=10, items_range=(2,5), value_range=(1,100), 
+        outlier_fraction=0.2, use_log=True, sig=100,
+        r1=1, r2=2, a1=0, a2=360, points=200,
+        default_sort=False, default_sort_override=True, default_sort_override_reversed=True,
+        mode='smart', no_groups=False, rotate_deg=0, full=False, rectangular=False,
+        data_only=False):
+
+        groupers = [chr(97 + i) for i in range(num_levels)]
+        df = cls.__generate_hierarchical_data(num_levels=num_levels, num_top_level_items=num_top_level_items, 
+            items_range=items_range, value_range=value_range, outlier_fraction=outlier_fraction, use_log=use_log, sig=sig)
+        
+        if data_only:
+            return df
+
+        return cls(df=df, groupers=groupers, value='value', r1=r1, r2=r2, a1=a1, a2=a2, points=points,
+            default_sort=default_sort, default_sort_override=default_sort_override, default_sort_override_reversed=default_sort_override_reversed,
+            mode=mode, no_groups=no_groups, rotate_deg=rotate_deg, full=full, rectangular=rectangular)
 
     def __corner_dictionary(self, group, start, count, value=None):
         df_dict = None

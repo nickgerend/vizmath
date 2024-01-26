@@ -2,7 +2,7 @@
 # Nick's Quad-Tile Chart
 
 import pandas as pd
-from math import sqrt, inf, pi
+from math import sqrt, inf, sin, cos, radians
 import copy
 import matplotlib.pyplot as plt
 import random
@@ -13,9 +13,11 @@ from matplotlib.path import Path
 
 from . import functions as vf
 from .draw import points as dp
+from .radial_treemap import rad_treemap as rt
 
 # import functions as vf
 # from draw import points as dp
+# from radial_treemap import rad_treemap as rt
 
 class quadtile:
 
@@ -471,11 +473,11 @@ class polyquadtile:
         self.sides = sides
         self.collapse = collapse
         if constraints is None:
-            self.constraints = vf.rectangle(2,1,-45, x_offset=xc, y_offset=yc)
+            self.constraints = vf.rectangle(2, 1, -45, x_offset=xc, y_offset=yc)
         elif len(constraints) == 1:
             cw = constraints[0][0]
             ch = constraints[0][1]
-            self.constraints = vf.rectangle(cw,ch,-1.*rotate, x_offset=xc, y_offset=yc)
+            self.constraints = vf.rectangle(cw, ch, -rotate, x_offset=xc, y_offset=yc)
         else:
             if poly_sort:
                 self.constraints = vf.sort_vertices(constraints)
@@ -1019,3 +1021,92 @@ class polyquadtile:
 
     def to_csv(self, file_name):
         self.o_polyquadtile_chart.dataframe_to_csv(file_name)
+
+class squaremap:
+
+    def __init__(self, df, groupers, value_field=None,
+        buffer=0.05, rotate=45., constraints=None, sides=['top','right','bottom','left'],
+        collapse=False, auto=True, auto_max_iter=20, auto_min_val=0.0001, auto_max_val=20.,
+        xc=0., yc=0.,  poly_sort=False):
+
+        if value_field is None:
+            df['__value'] = 1
+            value_field = '__value'
+
+        if constraints is None:
+            self.constraints = vf.rectangle(2, 1, -45, x_offset=xc, y_offset=yc)
+        elif len(constraints) == 1:
+            cw = constraints[0][0]
+            ch = constraints[0][1]
+            self.constraints = vf.rectangle(cw, ch, -rotate, x_offset=xc, y_offset=yc)
+        else:
+            if poly_sort:
+                self.constraints = vf.sort_vertices(constraints)
+            else:
+                self.constraints = constraints
+            self.constraints += np.array([xc, yc])
+        
+        
+        self.o_squaremap = self.__polyquadtile_treemap(df, groupers, value_field, buffer, constraints, sides, rotate,
+            collapse=collapse, auto=auto, auto_max_iter=auto_max_iter, auto_min_val=auto_min_val, auto_max_val=auto_max_val)
+
+
+    def __polyquadtile_treemap(self, df, groupers, value_field, buffer=0, poly=[(1,1)], sides=['top','right','bottom','left'], rotate=0, origin=(0,0),
+            collapse=False, auto=True, auto_max_iter=20, auto_min_val=0.0001, auto_max_val=20.):
+        top_field = groupers[0]
+        bottom_fields = groupers[1:]
+        top_level = df.groupby(top_field).sum().reset_index()
+        o_pqt = polyquadtile(top_level,top_field,value_field, rotate=0, sides=sides, buffer=buffer, constraints=poly,
+            collapse=collapse, auto=auto, auto_max_iter=auto_max_iter, auto_min_val=auto_min_val, auto_max_val=auto_max_val)
+        o_pqt.o_polysquares.df['width'] = o_pqt.o_polysquares.df['w'] - 2*o_pqt.buffer
+        o_pqt_df = o_pqt.o_polyquadtile_chart.df[['item','side','x','y','path']].copy(deep=True)
+        o_pqt_df.rename({'item': 'group'}, axis=1, inplace=True)
+        treemaps = [o_pqt_df]
+        for i in range(len(o_pqt.o_polysquares.viz)):
+            id = o_pqt.o_polysquares.viz[i].id
+            w = o_pqt.o_polysquares.viz[i].w
+            x = o_pqt.o_polysquares.viz[i].x
+            y = o_pqt.o_polysquares.viz[i].y
+            side = o_pqt.o_polysquares.viz[i].side
+            sw = w-2*o_pqt.buffer
+            x1, x2 = x-sw/2, x+sw/2
+            y1, y2 = y-sw/2, y+sw/2
+            df_tm = df.loc[df[top_field]==id].copy(deep=True)
+            o_rt = rt(df_tm, bottom_fields, value_field, r1=y1, r2=y2,
+                a1=x1, a2=x2, rectangular=True)
+            o_rt.o_rad_treemap.df['side'] = side
+            o_rt.o_rad_treemap.df['group'] = o_rt.o_rad_treemap.df['group'].apply(
+                lambda x: (id,) + tuple(x.split(',')) if isinstance(x, str) else (id,) + x)
+            treemaps.append(o_rt.o_rad_treemap.df[['group','side','x','y','path']])
+        pqt_tm = pd.concat(treemaps, axis=0)
+        
+        # treemap attributes
+        o_rt = rt(df, groupers, value_field, r1=0, r2=1, a1=0, a2=1, rectangular=True)
+        o_rt.o_rad_treemap.df.drop_duplicates(subset=['count','group','level','level_rank','overall_rank','value'], inplace=True)
+        tma = o_rt.o_rad_treemap.df[['count','group','level','level_rank','overall_rank','value']].copy(deep=True)
+        pqt_tm_df = pd.merge(pqt_tm, tma, how ='left', on ='group')
+        o_rt.df_rad_treemap = pqt_tm_df
+        if rotate != 0:
+            rotate = -rotate
+            o_rt.df_rad_treemap[['x', 'y']] = o_rt.df_rad_treemap.apply(lambda row: 
+                ((cos(radians(rotate)) * (row['x'] - origin[0]) - 
+                sin(radians(rotate)) * (row['y'] - origin[1])) + origin[0],
+                (sin(radians(rotate)) * (row['x'] - origin[0]) + 
+                cos(radians(rotate)) * (row['y'] - origin[1])) + origin[1]), axis=1, result_type='expand')
+        return o_rt
+    
+    @classmethod
+    def random_squaremap(cls, num_levels=3, num_top_level_items=10, items_range=(2,5), value_range=(1,100), 
+        outlier_fraction=0.2, use_log=True, sig=100,
+        buffer=0.2, rotate=45., constraints=None, sides=['top','right','bottom','left'],
+        collapse=False, auto=True, auto_max_iter=20, auto_min_val=0.0001, auto_max_val=20.,
+        poly_sort=False):
+        
+        df = rt.random_rad_treemap(num_levels=num_levels, num_top_level_items=num_top_level_items, items_range=items_range, value_range=value_range, 
+            outlier_fraction=outlier_fraction, use_log=use_log, sig=sig, data_only=True)
+        groupers = [chr(97 + i) for i in range(num_levels)]
+        
+        return cls(df, groupers, value_field='value',
+            buffer=buffer, rotate=rotate, constraints=constraints, sides=sides,
+            collapse=collapse, auto=auto, auto_max_iter=auto_max_iter, auto_min_val=auto_min_val, auto_max_val=auto_max_val,
+            poly_sort=poly_sort)

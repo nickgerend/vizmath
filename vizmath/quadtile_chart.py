@@ -10,6 +10,7 @@ import string
 import numpy as np
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
+from decimal import Decimal
 
 from . import functions as vf
 from .draw import points as dp
@@ -549,18 +550,20 @@ class polyquadtile:
 
     def __seg_len_to_ploy(self, x, y, poly):
         x0 = -1
-        y0 = y
-        intercepts = vf.line_polygon_intercepts(x0, y0, x, y, poly)
+        y0 = float(y)
+        xf = float(x)
+        yf = float(y)
+        intercepts = vf.line_polygon_intercepts(x0, y0, xf, yf, poly)
         intercept = max(intercepts, key=lambda p: p[0]) # max along the x-axis
-        segment_length = vf.distance_between_two_points(x, y, intercept[0], intercept[1])
-        return segment_length
+        segment_length = vf.distance_between_two_points(xf, yf, intercept[0], intercept[1])
+        return Decimal(str(segment_length))
 
     class __segment:
         def __init__(self, x, y, length, height=inf, active=True): 
-            self.x = x
-            self.y = y
-            self.length = length
-            self.height = height
+            self.x = Decimal(str(x))
+            self.y = Decimal(str(y))
+            self.length = Decimal(str(length))
+            self.height = Decimal(str(height))
             self.active = active
         def __eq__(self, other):
             return self.x == other.x and self.y == other.y and self.length == other.length and self.height == other.height
@@ -662,6 +665,9 @@ class polyquadtile:
 
     def __squares_to_centroids(self, offset, rotate):
         for o in self.o_polysquares.viz:
+            o.x = float(o.x)
+            o.y = float(o.y)
+            o.w = float(o.w)
             o.x += o.w/2.
             o.y += o.w/2.
             if o.side == 'center':
@@ -745,31 +751,36 @@ class polyquadtile:
         ids = df_quad[self.id_field].values
         areas = df_quad[value_field].values
         self.__add_square(list_xy, 0, center_id, 0., 0., center_w, center_a, 'center')
+
+        # decimals
+        buffer = Decimal(str(buffer))
+        center_w = Decimal(str(center_w))
+        widths = [Decimal(str(f)) for f in widths]
         
 
         side_dict = {
             'top' : {
                 'segments' : [self.__segment(0., 0., length=self.__seg_len_to_ploy(0., 0., poly_quad['top']))],
-                'lvl' : 0.,
-                'lvl_h' : 0.,
+                'lvl' : Decimal('0.'),
+                'lvl_h' : Decimal('0.'),
                 'no_room' : False
             },
             'right' : {
                 'segments' : [self.__segment(0., 0., length=self.__seg_len_to_ploy(0., 0., poly_quad['right']))],
-                'lvl' : 0.,
-                'lvl_h' : 0.,
+                'lvl' : Decimal('0.'),
+                'lvl_h' : Decimal('0.'),
                 'no_room' : False
             },
             'bottom' : {
                 'segments' : [self.__segment(0., 0., length=self.__seg_len_to_ploy(0., 0., poly_quad['bottom']))],
-                'lvl' : 0.,
-                'lvl_h' : 0.,
+                'lvl' : Decimal('0.'),
+                'lvl_h' : Decimal('0.'),
                 'no_room' : False
             },
             'left' : {
                 'segments' : [self.__segment(0., 0., length=self.__seg_len_to_ploy(0., 0., poly_quad['left']))],
-                'lvl' : 0.,
-                'lvl_h' : 0.,
+                'lvl' : Decimal('0.'),
+                'lvl_h' : Decimal('0.'),
                 'no_room' : False
             }}
 
@@ -790,13 +801,13 @@ class polyquadtile:
             # segments sorted by smallest height (for bridge segments) then smallest x that are active
             sorted_segments = copy.deepcopy(sorted([s for s in side_dict[side]['segments'] if s.active], key=lambda s: (s.height, s.x)))
             for j in range(len(sorted_segments)):
-                
+
                 segment = sorted_segments[j]
                 seg_idx = next((i for i, s in enumerate(side_dict[side]['segments']) if s == segment), None)
                 segments = side_dict[side]['segments']
                 placed, side_dict[side]['lvl_h'] = self.__place(segments, segment, seg_idx, w, poly_quad[side], side_dict[side]['lvl'], side_dict[side]['lvl_h']) # place square if possible
 
-                #region collapse (TODO: potential for floating point math issues with equality)
+                #region collapse
                 # check to see if any segments coencide with the new (left-most) segment, if so, combine
                 if self.collapse:
                     new_left_segment = segments[seg_idx]
@@ -819,9 +830,10 @@ class polyquadtile:
                                         merge_segment.length += w + covered_segment.length
                                         segments.pop(seg_idx)
                                     else:
-                                        # lengthen the current sections
-                                        new_left_segment.x = left_square.x + left_square.w
-                                        new_left_segment.length += covered_segment.length
+                                        # lengthen the current sections (but check that it doesn't backtrack too far)
+                                        if left_square.x + left_square.w > new_left_segment.x - w:
+                                            new_left_segment.x = left_square.x + left_square.w
+                                            new_left_segment.length += covered_segment.length
                 #endregion
 
                 if segment == last_lvl_segment and not placed and side_dict[side]['lvl'] != side_dict[side]['lvl_h']: # create a bridge segment
@@ -877,7 +889,10 @@ class polyquadtile:
 
         #region rotate
         path_counter = 1
+        buffer = float(buffer)
         for o in sorted(list_xy.viz, key=lambda o: (o.item, o.path)):
+            o.x = float(o.x)
+            o.y = float(o.y)
             if path_counter == 6:
                 path_counter = 1
             if path_counter == 1 or path_counter == 5:
@@ -952,8 +967,9 @@ class polyquadtile:
                 self.o_polysquares = dp()
                 self.polyquadtile_chart(df, 'apqt_norm', 0)
                 squares_fit = len(self.o_polysquares.viz)
-            except:
-                pass
+            except: # Exception as e:
+                # print(e)
+                pass # TODO implement exceptions as needed
             if squares == squares_fit:
                 if i >= max_iter:
                     break

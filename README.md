@@ -4,4 +4,4 @@
 pip install vizmath
 
 ## Usage
-coming soon
+coming soon, check out https://medium.com/@nickgerend for tutuorials

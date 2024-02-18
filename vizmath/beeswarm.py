@@ -2,6 +2,7 @@
 #%%
 # Nick's (modified) Beeswarm Chart
 
+import pandas as pd
 from math import inf, pi, sqrt
 import numpy as np
 import random

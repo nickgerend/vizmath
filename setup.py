@@ -13,9 +13,8 @@ setup(
     url="https://github.com/nickgerend/vizmath",
     author="Nick Gerend",
     author_email="nickgerend@gmail.com",
-    license="Dual License: Non-Commercial Use License and Commercial Use License",
+    license="Dual License: Non-Commercial Use License and Commercial Use License, see LICENSE-NC and LICENSE-COM for terms",
     classifiers=[
-        "License :: see LICENSE-NC and LICENSE-COM for terms",
         "Programming Language :: Python :: 3.9",
     ],
     packages=st.find_namespace_packages(),

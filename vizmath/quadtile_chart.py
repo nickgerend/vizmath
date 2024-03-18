@@ -13,6 +13,7 @@ import numpy as np
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
 from decimal import Decimal
+# from IPython.display import display # for continued plotting
 
 from . import functions as vf
 from .draw import points as dp
@@ -407,7 +408,7 @@ class quadtile:
         self.o_quadtile_chart.to_dataframe()
 
     def quadtile_plot(self, opacity=0.5, show_constraints=False, polygon=None,
-        color='w', poly_color='skyblue', poly_line='b-', squares_off=False, circles=False, cw=2):
+        color='w', poly_color='skyblue', poly_line='b-', squares_off=False, circles=False, cw=2, show=True):
         colors = {'center':'#E7E6E6', 'top':'#87B8F8', 'right':'#E6AFAB', 'bottom':'#A5FFF6', 'left':'#EBC099'}
         df_lvl_group = self.o_quadtile_chart.df.groupby(['item'])
         centroids = self.o_squares.viz
@@ -425,7 +426,7 @@ class quadtile:
                 if side == 'center':
                     set_linewidth = cw
                 axs.fill(x, y, alpha=opacity, fc=c)
-                plt.plot(x, y, 'k-', linewidth=set_linewidth)
+                axs.plot(x, y, 'k-', linewidth=set_linewidth)
         if circles:
             for c in centroids:
                 x = c.x
@@ -434,7 +435,7 @@ class quadtile:
                 set_linewidth = 0.75
                 if c.side == 'center':
                     set_linewidth = cw
-                circle = plt.Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
+                circle = axs.Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
                 axs.add_patch(circle)
         if show_constraints:
             if self.constraints is not None:
@@ -442,16 +443,18 @@ class quadtile:
                 x_sorted_polygon, y_sorted_polygon = zip(*sorted_polygon)
                 x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
                 y_sorted_polygon += (y_sorted_polygon[0],)
-                plt.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
-                plt.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
+                axs.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
+                axs.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
         if polygon is not None:
             sorted_polygon = vf.sort_vertices(polygon)
             x_sorted_polygon, y_sorted_polygon = zip(*sorted_polygon)
             x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
             y_sorted_polygon += (y_sorted_polygon[0],)
-            plt.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
-            plt.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
-        plt.show(block=True)
+            axs.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
+            axs.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
+        if show:
+            plt.show()
+        return fig, axs
     
     def to_df(self):
         return self.o_quadtile_chart.df
@@ -989,7 +992,7 @@ class polyquadtile:
             squares_fit = len(self.o_polysquares.viz)
 
     def polyquadtile_plot(self, opacity=0.5, show_constraints=False, polygon=None,
-            color='w', poly_color='skyblue', poly_line='b-', squares_off=False, circles=False, cw=2):
+            color='w', poly_color='skyblue', poly_line='b-', squares_off=False, circles=False, cw=2, show=True):
         colors = {'center':'#E7E6E6', 'top':'#87B8F8', 'right':'#E6AFAB', 'bottom':'#A5FFF6', 'left':'#EBC099'}
         df_lvl_group = self.o_polyquadtile_chart.df.groupby(['item'])
         centroids = self.o_polysquares.viz
@@ -1007,7 +1010,7 @@ class polyquadtile:
                 if side == 'center':
                     set_linewidth = cw
                 axs.fill(x, y, alpha=opacity, fc=c)
-                plt.plot(x, y, 'k-', linewidth=set_linewidth)
+                axs.plot(x, y, 'k-', linewidth=set_linewidth)
         if circles:
             for c in centroids:
                 x = c.x
@@ -1016,23 +1019,25 @@ class polyquadtile:
                 set_linewidth = 0.75
                 if c.side == 'center':
                     set_linewidth = cw
-                circle = plt.Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
+                circle = axs.Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
                 axs.add_patch(circle)
         if show_constraints:
             sorted_polygon = self.constraints
             x_sorted_polygon, y_sorted_polygon = zip(*sorted_polygon)
             x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
             y_sorted_polygon += (y_sorted_polygon[0],)
-            plt.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
-            plt.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
+            axs.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
+            axs.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
         if polygon is not None:
             sorted_polygon = vf.sort_vertices(polygon)
             x_sorted_polygon, y_sorted_polygon = zip(*sorted_polygon)
             x_sorted_polygon += (x_sorted_polygon[0],) # close the polygon
             y_sorted_polygon += (y_sorted_polygon[0],)
-            plt.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
-            plt.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
-        plt.show(block=True)
+            axs.plot(x_sorted_polygon, y_sorted_polygon, poly_line, label='Polygon')
+            axs.fill(x_sorted_polygon, y_sorted_polygon, poly_color, alpha=0.3)
+        if show:
+            plt.show()
+        return fig, axs
 
     def to_df(self):
         return self.o_polyquadtile_chart.df

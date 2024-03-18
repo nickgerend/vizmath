@@ -9,6 +9,7 @@ from math import pi, cos, sin, sqrt, log
 import random
 import matplotlib.pyplot as plt
 import copy
+# from IPython.display import display # for continued plotting
 
 from . import functions as vf
 from .draw import points as dp
@@ -319,7 +320,7 @@ class rad_treemap:
         df_out = pd.concat(dfs, axis=0)
         return df_out
 
-    def __rad_tm_plot(self, pie_tree_df, level, opacity, line_level, mult):
+    def __rad_tm_plot(self, pie_tree_df, level, opacity, line_level, mult, show=True):
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
         df_lvl = pie_tree_df.loc[pie_tree_df['level'] == level]
@@ -332,14 +333,14 @@ class rad_treemap:
             g = random.random()
             color = (r, g, b)
             axs.fill(x, y, alpha=opacity, fc=color)
-            plt.plot(x, y, 'k-', linewidth=0.5)
+            axs.plot(x, y, 'k-', linewidth=0.5)
         if line_level > 0:
             df_lvl = pie_tree_df.loc[pie_tree_df['level'] == line_level]
             df_lvl_group = df_lvl.groupby(['group'])
             for group, rows in df_lvl_group:
                 x = rows['x'].values
                 y = rows['y'].values
-                plt.plot(x, y, 'k-', linewidth=3)
+                axs.plot(x, y, 'k-', linewidth=3)
         elif line_level < 0:
             mult += level
             colors = [str(i / (mult-1)) for i in range(mult)]
@@ -349,10 +350,12 @@ class rad_treemap:
                 for group, rows in df_lvl_group:
                     x = rows['x'].values
                     y = rows['y'].values
-                    plt.plot(x, y, color = colors[i-1], linewidth=3)
-        plt.show()
+                    axs.plot(x, y, color = colors[i-1], linewidth=3)
+        if show:
+            plt.show()
+        return fig, axs
 
-    def __rad_tm_plot2(self, pie_tree_df, level, opacity, title, axis, limit, fill):
+    def __rad_tm_plot2(self, pie_tree_df, level, opacity, title, axis, limit, fill, show=True):
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
         df_lvl = pie_tree_df.loc[pie_tree_df['level'] == level]
@@ -381,13 +384,15 @@ class rad_treemap:
                 y = rows['y'].values
                 if limit == i+1 or limit == 0:
                     if limit == i+1:
-                        plt.plot(x, y, color='black', linewidth=7)
-                        plt.plot(x, y, color='grey', linewidth=4)
+                        axs.plot(x, y, color='black', linewidth=7)
+                        axs.plot(x, y, color='grey', linewidth=4)
                     else:
-                        plt.plot(x, y, color=colors[i], linewidth=lw)
-        plt.title(title)
-        plt.axis(axis)
-        plt.show()
+                        axs.plot(x, y, color=colors[i], linewidth=lw)
+        axs.set_title(title)
+        axs.axis(axis)
+        if show:
+            plt.show()
+        return fig, axs
 
     def rad_treemap(self, chart_width=1, legend_width=0.1, buffer=.01):
         if not self.full:
@@ -401,10 +406,12 @@ class rad_treemap:
             self.df_rad_treemap = self.o_rad_treemap.df
             
     def plot_level(self, level=1, opacity=0.5, line_level=0, mult=0):
-        self.__rad_tm_plot(self.df_rad_treemap, level=level, opacity=opacity, line_level=line_level, mult=mult)
+        fig, axs = self.__rad_tm_plot(self.df_rad_treemap, level=level, opacity=opacity, line_level=line_level, mult=mult)
+        return fig, axs
 
     def plot_levels(self, level=1, opacity=0.5, title='', axis='on', limit=0, fill='gray'):
-        self.__rad_tm_plot2(self.df_rad_treemap, level=level, opacity=opacity, title=title, axis=axis, limit=limit, fill=fill)
+        fig, axs = self.__rad_tm_plot2(self.df_rad_treemap, level=level, opacity=opacity, title=title, axis=axis, limit=limit, fill=fill)
+        return fig, axs
 
     def to_df(self):
         return self.o_rad_treemap.df

@@ -6,6 +6,7 @@
 from math import inf
 import random
 import matplotlib.pyplot as plt
+# from IPython.display import display # for continued plotting
 
 from . import functions as vf
 from .draw import points as dp
@@ -239,7 +240,7 @@ class crystals:
         self.df[self.height_field] += self.offset
         self.o_crystal_bar_chart.to_dataframe()
 
-    def cbc_plot(self, opacity=0.8, legend=True, alternate_color=False, color=True):
+    def cbc_plot(self, opacity=0.8, legend=True, alternate_color=False, color=True, show=True):
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
         df_lvl_group = self.o_crystal_bar_chart.df.groupby(['id','side'])
@@ -273,7 +274,9 @@ class crystals:
             y = rows['y'].values
             i = rows['group'].values[0]
             axs.fill(x, y, alpha=opacity, fc=colors[i], linewidth=0.5, edgecolor='black')
-        plt.show()
+        if show:
+            plt.show()
+        return fig, axs
 
     def to_df(self):
         return self.o_crystal_bar_chart.df

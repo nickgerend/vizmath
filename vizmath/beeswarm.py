@@ -9,6 +9,7 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 import string
+# from IPython.display import display # for continued plotting
 
 from . import functions as vf
 from .draw import points as dp
@@ -140,7 +141,7 @@ class swarm():
             [o.__setattr__('x', new_x) or o.__setattr__('y', new_y) for o, (new_x, new_y) in zip(self.o_beeswarm.viz, [vf.rotate(o.x, o.y, self.rotation) for o in self.o_beeswarm.viz])]
         self.o_beeswarm.to_dataframe()
 
-    def beeswarm_plot(self, opacity=0.5, color=True):
+    def beeswarm_plot(self, opacity=0.5, color=True, show=True):
         fig, axs = plt.subplots()
         axs.set_aspect('equal', adjustable='box')
         df_group = self.o_beeswarm.df.groupby(['id'])
@@ -156,5 +157,8 @@ class swarm():
             else:
                 c = (1, 1, 1)
             axs.fill(x, y, alpha=opacity, fc=c)
-            plt.plot(x, y, 'k-', linewidth=1.2)
-        plt.show()
+            axs.plot(x, y, 'k-', linewidth=1.2)
+        if show:
+            plt.show()
+        return fig, axs
+    

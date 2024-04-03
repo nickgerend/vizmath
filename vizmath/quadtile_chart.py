@@ -12,6 +12,7 @@ import string
 import numpy as np
 from scipy.spatial import ConvexHull
 from matplotlib.path import Path
+from matplotlib.patches import Circle
 from decimal import Decimal
 # from IPython.display import display # for continued plotting
 
@@ -435,7 +436,7 @@ class quadtile:
                 set_linewidth = 0.75
                 if c.side == 'center':
                     set_linewidth = cw
-                circle = axs.Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
+                circle = Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
                 axs.add_patch(circle)
         if show_constraints:
             if self.constraints is not None:
@@ -1019,7 +1020,7 @@ class polyquadtile:
                 set_linewidth = 0.75
                 if c.side == 'center':
                     set_linewidth = cw
-                circle = axs.Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
+                circle = Circle((x, y), r, color='black', fill=False, linewidth=set_linewidth)
                 axs.add_patch(circle)
         if show_constraints:
             sorted_polygon = self.constraints

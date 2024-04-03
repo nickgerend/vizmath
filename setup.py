@@ -1,13 +1,5 @@
 import pathlib
-import setuptools as st
-from setuptools import setup
-
-def read_gitignore():
-    gitignore_path = pathlib.Path(__file__).parent / '.gitignore'
-    if gitignore_path.exists():
-        with gitignore_path.open('r') as f:
-            return [line.strip() for line in f if line.strip() and not line.startswith('#')]
-    return []
+from setuptools import setup, find_packages
 
 HERE = pathlib.Path(__file__).parent
 README = (HERE / "README.md").read_text()
@@ -24,7 +16,7 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 3.9",
     ],
-    packages=st.find_namespace_packages(exclude=read_gitignore()),
+    packages=find_packages(exclude=['vizmath.examples*','vizmath.tests*']),
     install_requires=["numpy", "scipy", "matplotlib", "pandas"],
     include_package_data=True,
     package_data={'': ['data/*.csv']},

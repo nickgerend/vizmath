@@ -18,12 +18,37 @@ def circle(xo, yo, r=1., points=50, spread=360., end_cap=False):
     angle = 0. #-90.
     path_i = 1
     points_to_draw = points
-    if end_cap:
-        points_to_draw += 1
     for i in range(points_to_draw):
         list_xy.append((xo+r*sin(angle*pi/180.), yo+r*cos(angle*pi/180.), path_i))
         angle += 1./points*spread
         path_i += 1
+    if end_cap:
+        list_xy.append(list_xy[0])
+    return list_xy
+
+def eq_triangle(xo, yo, side_length=1., area=None, end_cap=False):
+    if area is not None:
+        side_length = sqrt(4 * area / sqrt(3))
+    height = sqrt(3) / 2 * side_length
+    top_vertex = (xo, yo + height * 2 / 3)
+    right_vertex = (xo + side_length / 2, yo - height / 3)
+    left_vertex = (xo - side_length / 2, yo - height / 3)
+    list_xy = [top_vertex, right_vertex, left_vertex]
+    if end_cap:
+        list_xy.append(list_xy[0])
+    return list_xy
+
+def regular_polygon(xo, yo, n_sides, area=1, end_cap=False):
+    angle = pi / n_sides
+    radius = sqrt((2 * area) / (n_sides * sin(2 * angle)))
+    list_xy = []
+    for k in range(n_sides):
+        theta = -2 * pi * k / n_sides + pi / 2
+        xk = xo + radius * cos(theta)
+        yk = yo + radius * sin(theta)
+        list_xy.append((xk, yk))
+    if end_cap:
+        list_xy.append(list_xy[0])
     return list_xy
 
 def rescale(x, xmin, xmax, newmin, newmax):
@@ -159,7 +184,7 @@ def is_point_on_line(x0, y0, x1, y1, x2, y2):
 #endregion
 
 #region binning functions
-def range_group(df, item_col='item', min_col='min', max_col='max'):
+def range_group(df, item_col='item', min_col='min', max_col='max', group_name='group'):
     # Nick's range group function
     dfi = df[[item_col, min_col, max_col]]
     records = dfi.to_records(index=False)
@@ -204,8 +229,8 @@ def range_group(df, item_col='item', min_col='min', max_col='max'):
         for i in range(len(groups[key])):
             rows.append((key,groups[key][i][0]))
 
-    df_join = pd.DataFrame(rows, columns=['group', 'item'])
-    df_out = df.merge(df_join, on=['item'], how='left')
+    df_join = pd.DataFrame(rows, columns=[group_name, item_col])
+    df_out = df.merge(df_join, on=[item_col], how='left')
     return df_out
 #endregion
 
@@ -547,11 +572,17 @@ def effective_solar_flux(teff):
 
 def circle_collide(x1, y1, x2, r1, r2, place='top'):
     y2 = None
-    if (x1-r1 <= x2-r2 and x1+r1 >= x2-r2) or (x1-r1 <= x2+r2 and x1+r1 >= x2+r2):
+    # if (x1-r1 <= x2-r2 and x1+r1 >= x2-r2) or (x1-r1 <= x2+r2 and x1+r1 >= x2+r2):
+    x1_left, x1_right = x1 - r1, x1 + r1
+    x2_left, x2_right = x2 - r2, x2 + r2
+    if not (x2_right < x1_left or x2_left > x1_right):
+        yc = -x2**2 + 2*x2*x1 + r2**2 + 2*r2*r1 + r1**2 - x1**2
+        if yc < 0:
+            yc = 0
         if place == 'bottom':
-            y2 = y1 - sqrt(-x2**2 + 2*x2*x1 + r2**2 + 2*r2*r1 + r1**2 - x1**2)
+            y2 = y1 - sqrt(yc)
         if place == 'top':
-            y2 = sqrt(-x2**2 + 2*x2*x1 + r2**2 + 2*r2*r1 + r1**2 - x1**2) + y1
+            y2 = sqrt(yc) + y1
     return y2
 
 def circle_collided(x1, y1, x2, y2, r1, r2, tol=10):

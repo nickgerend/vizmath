@@ -27,7 +27,7 @@ class pathswarm:
         min=None, max=None, path=[],
         size_field=None, order_field=None, direction_field=None,
         buffer=0., size_override=None, direction_override=None,
-        rotation=0, tol_overlap=10, interp='cubic_spline', df_only=False, kwargs={}):
+        rotation=0, tol_overlap=10, tol_r=1e-10, interp='cubic_spline', df_only=False, kwargs={}):
 
         self.df = df
         self.id_field = id_field
@@ -43,6 +43,7 @@ class pathswarm:
         self.direction_override = direction_override
         self.rotation = rotation
         self.tol_overlap = tol_overlap
+        self.tol_r = tol_r
         self.interp = interp
         self.df_only = df_only
         self.kwargs = kwargs
@@ -77,6 +78,10 @@ class pathswarm:
         size_field='size', order_field=None, direction_field=None,
         buffer=buffer, size_override=size_override, direction_override=direction_override,
         rotation=rotation, tol_overlap=tol_overlap, interp=interp, df_only=False, kwargs=kwargs)
+    
+    @classmethod
+    def random_path(cls):
+        return cls.__generate_path()
 
     def __path_x_intersections(self, line_points, path_points, known_point=None, tol=1e-5):
 
@@ -169,7 +174,7 @@ class pathswarm:
     def __path_generate(self):
         
         if not self.path:
-            self.path = [(self.df['position_field'].min(),0.),(self.df['position_field'].max(),0.)]
+            self.path = [(self.df[self.position_field].min(),0.),(self.df[self.position_field].max(),0.)]
             self.interp = 'linear'
 
         if self.interp =='cubic_spline':
@@ -492,7 +497,7 @@ class pathswarm:
             node.node_prospects.append((x_rotated, y_b_rotated, cb_b, nis.id))
         # filter out prospects with collisions
         node.node_prospects = [(x, y,
-            not c and not any(vf.circle_collided(x, y, nis.loop_x, nis.loop_y, radius, nis.node_radius, self.tol_overlap) 
+            not c and not any(vf.circle_collided(x, y, nis.loop_x, nis.loop_y, radius, nis.node_radius, self.tol_overlap, self.tol_r) 
             for nis in placed_nodes_in_shadow),
             i) for x, y, c, i in node.node_prospects]
         if mode == 'closest':
@@ -565,7 +570,7 @@ class pathswarm:
                 place = True
                 for nip in placed_nodes_in_place:
                     x2, y2, r2 = nip.node_x, nip.node_y, nip.node_radius
-                    if vf.circle_collided(x1, y1, x2, y2, r1, r2, self.tol_overlap):
+                    if vf.circle_collided(x1, y1, x2, y2, r1, r2, self.tol_overlap, self.tol_r):
                         place = False
                 if place:
                     #place the node
@@ -613,7 +618,7 @@ class superswarm:
 
     def __init__(self, df, id_field, position_field, 
         min=None, max=None, size_field=None, order_field=None, 
-        buffer=0., size_override=None, rotation=0, tol_overlap=10,
+        buffer=0., size_override=None, rotation=0, tol_overlap=10, tol_r=1e-10,
         shape='c', kwargs={}):
         
         self.df = df
@@ -627,6 +632,7 @@ class superswarm:
         self.size_override = size_override
         self.rotation = rotation
         self.tol_overlap = tol_overlap
+        self.tol_r = tol_r
         self.shape = shape
         self.kwargs = kwargs
         
@@ -634,7 +640,7 @@ class superswarm:
         self.super_swarm(df=df, id_field=id_field, position_field=position_field,
             min=min, max=max, size_field=size_field, order_field=order_field,
             buffer=buffer, size_override=size_override, rotation=rotation,
-            tol_overlap=tol_overlap, kwargs=kwargs)
+            tol_overlap=tol_overlap, tol_r=tol_r, kwargs=kwargs)
 
     @classmethod
     def random_superswarm(cls, size, min=None, max=None, buffer=0., size_override=None, 
@@ -660,7 +666,7 @@ class superswarm:
         return path, interp
 
     def super_swarm(self, df, id_field, position_field, min, max, size_field, 
-        order_field, buffer, size_override, rotation, tol_overlap, kwargs):
+        order_field, buffer, size_override, rotation, tol_overlap, tol_r, kwargs):
         # defaults
         defaults = {'sort':'desc', 'size_by':'area', 'order_by':'size',
             'offset':None, 'mode':'closest', 'curve':False}
@@ -676,10 +682,21 @@ class superswarm:
             min=min, max=max, df_only=True)
         df_clip = o_ps_df.swarm_setup()
         area = 1.
+        size = None
+        ids = df_clip[id_field].values
+        if self.size_field is not None and self.size_override is None:
+            sizes = df_clip[self.size_field].values
+        elif self.size_override is not None:
+            size = self.size_override 
+            sizes = [size for _ in ids]
+        else:
+            size = (df_clip[position_field].max()-df_clip[position_field].min())/len(df_clip)*10
+            sizes = [size for _ in ids]
+        df_clip['__size'] = sizes
         if size_by == 'radius':
-            area = sum(pi * df_r**2 for df_r in df_clip['size'].values) # by radius
+            area = sum(pi * df_r**2 for df_r in df_clip['__size'].values) # by radius
         elif size_by == 'area':
-            area = df_clip['size'].sum() # by area
+            area = df_clip['__size'].sum() # by area
         if offset is None:
             offset = area/40.
         # provide path from shape option:
@@ -688,7 +705,7 @@ class superswarm:
         o_ps = pathswarm(df=df, id_field=id_field, position_field=position_field,
             min=min, max=max, path=path, size_field=size_field, order_field=order_field,
             buffer=buffer, size_override=size_override, rotation=rotation,
-            tol_overlap=tol_overlap, interp=interp,
+            tol_overlap=tol_overlap, tol_r=tol_r, interp=interp,
             kwargs={'closed':True, 'horizon':'top', 'sort':sort, 'order_by':order_by,
                 'offset':offset, 'mode':mode, 'size_by': size_by})
         self.pathswarm = o_ps
@@ -700,7 +717,7 @@ class beeswarm:
 
     def __init__(self, df, id_field, position_field, min=None, max=None,
         size_field=None, order_field=None, buffer=0., size_override=None, 
-        rotation=0, tol_overlap=10, center_clusters=True, scale_to_data=True, kwargs={}):
+        rotation=0, tol_overlap=10, tol_r=1e-10, center_clusters=True, scale_to_data=True, kwargs={}):
         
         self.df = df
         self.id_field = id_field
@@ -713,6 +730,7 @@ class beeswarm:
         self.size_override = size_override
         self.rotation = rotation
         self.tol_overlap = tol_overlap
+        self.tol_r=tol_r
         self.center_clusters = center_clusters
         self.scale_to_data = scale_to_data
         self.kwargs = kwargs
@@ -721,7 +739,7 @@ class beeswarm:
         self.bee_swarm(df=df, id_field=id_field, position_field=position_field,
             min=min, max=max, size_field=size_field, order_field=order_field,
             buffer=buffer, size_override=size_override, rotation=rotation,
-            tol_overlap=tol_overlap, kwargs=kwargs)
+            tol_overlap=tol_overlap, tol_r=tol_r, kwargs=kwargs)
         
     @classmethod
     def random_beeswarm(cls, size, min=None, max=None, buffer=0., size_override=None, 
@@ -733,7 +751,7 @@ class beeswarm:
             center_clusters=center_clusters, scale_to_data=scale_to_data, kwargs=kwargs)
         
     def bee_swarm(self, df, id_field, position_field, min, max, size_field, 
-        order_field, buffer, size_override, rotation, tol_overlap, kwargs):
+        order_field, buffer, size_override, rotation, tol_overlap, tol_r, kwargs):
          # defaults
         defaults = {'sort':'desc', 'size_by':'area', 'order_by':'size',
             'mode':'closest'}
@@ -765,15 +783,26 @@ class beeswarm:
         o_ps = pathswarm(df=df, id_field=id_field, position_field=position_field,
             min=min, max=max, path=path, size_field=size_field, order_field=order_field,
             buffer=buffer, size_override=size_override, rotation=0,
-            tol_overlap=tol_overlap, interp=interp,
+            tol_overlap=tol_overlap, tol_r=tol_r, interp=interp,
             kwargs={'closed':False, 'horizon':None, 'sort':sort, 'order_by':order_by,
                 'offset':0., 'mode':mode, 'size_by': size_by})
         if self.center_clusters:
             # input setup for clustering
-            df_clip_center = df_clip[[id_field, position_field, size_field]].copy(deep=True)
+            size = None
+            ids = df_clip[id_field].values
+            if self.size_field is not None and self.size_override is None:
+                sizes = df_clip[self.size_field].values
+            elif self.size_override is not None:
+                size = self.size_override 
+                sizes = [size for _ in ids]
+            else:
+                size = (df_clip[position_field].max()-df_clip[position_field].min())/len(df_clip)*10
+                sizes = [size for _ in ids]
+            df_clip['__size'] = sizes
+            df_clip_center = df_clip[[id_field, position_field, '__size']].copy(deep=True)
             df_clip_center['__r'] = df_clip_center.apply(lambda row: size_override
-                if size_override is not None else (row[size_field] 
-                if size_by == 'radius' else (row[size_field] / np.pi) ** 0.5), axis=1)
+                if size_override is not None else (row['__size'] 
+                if size_by == 'radius' else (row['__size'] / np.pi) ** 0.5), axis=1)
             df_clip_center['__min'] = -df_clip_center['__r'] + df_clip_center[position_field]
             df_clip_center['__max'] = df_clip_center['__r'] + df_clip_center[position_field]
             # group by range clustering

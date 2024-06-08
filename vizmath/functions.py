@@ -585,7 +585,8 @@ def circle_collide(x1, y1, x2, r1, r2, place='top'):
             y2 = sqrt(yc) + y1
     return y2
 
-def circle_collided(x1, y1, x2, y2, r1, r2, tol=10):
+def circle_collided(x1, y1, x2, y2, r1, r2, tol=10, r_tol=0.0):
+    r1 = r1-r1*r_tol
     A = (x2-x1)**2 + (y2-y1)**2
     B = (r1+r2)**2
     result = False

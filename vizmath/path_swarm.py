@@ -800,9 +800,8 @@ class beeswarm:
                 sizes = [size for _ in ids]
             df_clip['__size'] = sizes
             df_clip_center = df_clip[[id_field, position_field, '__size']].copy(deep=True)
-            df_clip_center['__r'] = df_clip_center.apply(lambda row: size_override
-                if size_override is not None else (row['__size'] 
-                if size_by == 'radius' else (row['__size'] / np.pi) ** 0.5), axis=1)
+            df_clip_center['__r'] = df_clip_center.apply(lambda row: row['__size'] 
+                if size_by == 'radius' else (row['__size'] / np.pi) ** 0.5, axis=1)
             df_clip_center['__min'] = -df_clip_center['__r'] + df_clip_center[position_field]
             df_clip_center['__max'] = df_clip_center['__r'] + df_clip_center[position_field]
             # group by range clustering

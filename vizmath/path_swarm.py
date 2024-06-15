@@ -711,7 +711,7 @@ class superswarm:
         self.pathswarm = o_ps
 
     def plot_super_swarm(self, plot_lines=True,  plot=True):
-        self.pathswarm.plot_path_swarm(plot_lines=plot_lines,  plot=plot)
+        return self.pathswarm.plot_path_swarm(plot_lines=plot_lines,  plot=plot)
 
 class beeswarm:
 
@@ -830,4 +830,4 @@ class beeswarm:
         self.pathswarm = o_ps
 
     def plot_bee_swarm(self, plot_lines=True,  plot=True):
-        self.pathswarm.plot_path_swarm(plot_lines=plot_lines,  plot=plot)
+        return self.pathswarm.plot_path_swarm(plot_lines=plot_lines,  plot=plot)

@@ -27,7 +27,8 @@ class pathswarm:
         min=None, max=None, path=[],
         size_field=None, order_field=None, direction_field=None,
         buffer=0., size_override=None, direction_override=None,
-        rotation=0, tol_overlap=10, tol_r=1e-10, interp='cubic_spline', df_only=False, kwargs={}):
+        rotation=0, tol_overlap=10, tol_r=1e-10, interp='cubic_spline', df_only=False, 
+        draw_points=True, kwargs={}):
 
         self.df = df
         self.id_field = id_field
@@ -46,6 +47,7 @@ class pathswarm:
         self.tol_r = tol_r
         self.interp = interp
         self.df_only = df_only
+        self.draw_points = draw_points
         self.kwargs = kwargs
         
         self.i_path = None
@@ -523,20 +525,21 @@ class pathswarm:
         node.path_x, node.path_y = xsb, ysb
 
     def __swarm_xy(self, circle_resolution=50):
-        p = 0
-        for x, y in self.i_path:
-            # add path
-            self.o_pathswarm.append(p, x, y, p, type='path')
-            p += 1
-        for n in self.nodes:
-            # add circles
-            n_circle = vf.circle(n.node_x, n.node_y, r=n.node_radius-n.node_radius_buffer, end_cap=True, points=circle_resolution)
-            for c in n_circle:
-                self.o_pathswarm.append(id=n.id, x=c[0], y=c[1], path=c[2], type='node')
-            # add path to circle lines
-            self.o_pathswarm.append(id=n.id, x=n.path_xo, y=n.path_yo, path=0)
-            self.o_pathswarm.append(id=n.id, x=n.node_x, y=n.node_y, path=0)
-
+        if self.draw_points:
+            p = 0
+            for x, y in self.i_path:
+                # add path
+                self.o_pathswarm.append(p, x, y, p, type='path')
+                p += 1
+            for n in self.nodes:
+                # add circles
+                n_circle = vf.circle(n.node_x, n.node_y, r=n.node_radius-n.node_radius_buffer, end_cap=True, points=circle_resolution)
+                for c in n_circle:
+                    self.o_pathswarm.append(id=n.id, x=c[0], y=c[1], path=c[2], type='node')
+                # add path to circle lines
+                self.o_pathswarm.append(id=n.id, x=n.path_xo, y=n.path_yo, path=0)
+                self.o_pathswarm.append(id=n.id, x=n.node_x, y=n.node_y, path=0)
+            
     def swarm_rotate(self, degrees):
         # path
         for i in range(len(self.i_path)):
@@ -547,8 +550,9 @@ class pathswarm:
             n.path_xo, n.path_yo = vf.rotate(n.path_xo, n.path_yo, degrees)
             n.node_x, n.node_y = vf.rotate(n.node_x, n.node_y, degrees)
         # rotate list_xy:
-        for o in self.o_pathswarm.viz:
-            o.x, o.y = vf.rotate(o.x, o.y, degrees)
+        if self.draw_points:
+            for o in self.o_pathswarm.viz:
+                o.x, o.y = vf.rotate(o.x, o.y, degrees)
 
     def path_swarm(self):
         defaults = {'horizon':None, 'offset':0., 'mode':'closest'}
@@ -619,7 +623,7 @@ class superswarm:
     def __init__(self, df, id_field, position_field, 
         min=None, max=None, size_field=None, order_field=None, 
         buffer=0., size_override=None, rotation=0, tol_overlap=10, tol_r=1e-10,
-        shape='c', kwargs={}):
+        shape='c', draw_points=True, kwargs={}):
         
         self.df = df
         self.id_field = id_field
@@ -634,21 +638,24 @@ class superswarm:
         self.tol_overlap = tol_overlap
         self.tol_r = tol_r
         self.shape = shape
+        self.draw_points = draw_points
         self.kwargs = kwargs
         
         self.pathswarm = None
+        self.path_area = None
         self.super_swarm(df=df, id_field=id_field, position_field=position_field,
             min=min, max=max, size_field=size_field, order_field=order_field,
             buffer=buffer, size_override=size_override, rotation=rotation,
-            tol_overlap=tol_overlap, tol_r=tol_r, kwargs=kwargs)
+            tol_overlap=tol_overlap, tol_r=tol_r, draw_points=draw_points, kwargs=kwargs)
 
     @classmethod
     def random_superswarm(cls, size, min=None, max=None, buffer=0., size_override=None, 
-        rotation=0, tol_overlap=10, shape='c', kwargs={}):
+        rotation=0, tol_overlap=10, shape='c', draw_points=True, kwargs={}):
         data = [[''.join(random.choices(string.ascii_letters, k=5)), random.randint(1, 100)/10, random.randint(1, 100)/10] for _ in range(size)]
         df = pd.DataFrame(data, columns=['id', 'position', 'size'])
         return cls(df, 'id', 'position', min=min, max=max, size_field='size', order_field=None, buffer=buffer, 
-            size_override=size_override, rotation=rotation, tol_overlap=tol_overlap, shape=shape, kwargs=kwargs)
+            size_override=size_override, rotation=rotation, tol_overlap=tol_overlap, shape=shape,
+            draw_points=draw_points, kwargs=kwargs)
 
     def shape_path(self, area, curve):
         path = []
@@ -665,8 +672,8 @@ class superswarm:
             interp = 'cubic_spline'
         return path, interp
 
-    def super_swarm(self, df, id_field, position_field, min, max, size_field, 
-        order_field, buffer, size_override, rotation, tol_overlap, tol_r, kwargs):
+    def super_swarm(self, df, id_field, position_field, min, max, size_field, order_field, 
+        buffer, size_override, rotation, tol_overlap, tol_r, draw_points, kwargs):
         # defaults
         defaults = {'sort':'desc', 'size_by':'area', 'order_by':'size',
             'offset':None, 'mode':'closest', 'curve':False}
@@ -705,10 +712,11 @@ class superswarm:
         o_ps = pathswarm(df=df, id_field=id_field, position_field=position_field,
             min=min, max=max, path=path, size_field=size_field, order_field=order_field,
             buffer=buffer, size_override=size_override, rotation=rotation,
-            tol_overlap=tol_overlap, tol_r=tol_r, interp=interp,
+            tol_overlap=tol_overlap, tol_r=tol_r, interp=interp, draw_points=draw_points,
             kwargs={'closed':True, 'horizon':'top', 'sort':sort, 'order_by':order_by,
                 'offset':offset, 'mode':mode, 'size_by': size_by})
         self.pathswarm = o_ps
+        self.path_area = area
 
     def plot_super_swarm(self, plot_lines=True,  plot=True):
         return self.pathswarm.plot_path_swarm(plot_lines=plot_lines,  plot=plot)
@@ -717,7 +725,8 @@ class beeswarm:
 
     def __init__(self, df, id_field, position_field, min=None, max=None,
         size_field=None, order_field=None, buffer=0., size_override=None, 
-        rotation=0, tol_overlap=10, tol_r=1e-10, center_clusters=True, scale_to_data=True, kwargs={}):
+        rotation=0, tol_overlap=10, tol_r=1e-10, center_clusters=True, scale_to_data=True, 
+        draw_points=True, kwargs={}):
         
         self.df = df
         self.id_field = id_field
@@ -733,25 +742,28 @@ class beeswarm:
         self.tol_r=tol_r
         self.center_clusters = center_clusters
         self.scale_to_data = scale_to_data
+        self.draw_points = draw_points
         self.kwargs = kwargs
         
         self.pathswarm = None
         self.bee_swarm(df=df, id_field=id_field, position_field=position_field,
             min=min, max=max, size_field=size_field, order_field=order_field,
             buffer=buffer, size_override=size_override, rotation=rotation,
-            tol_overlap=tol_overlap, tol_r=tol_r, kwargs=kwargs)
+            tol_overlap=tol_overlap, tol_r=tol_r, draw_points=draw_points, kwargs=kwargs)
         
     @classmethod
     def random_beeswarm(cls, size, min=None, max=None, buffer=0., size_override=None, 
-        rotation=0, tol_overlap=10, center_clusters=True, scale_to_data=True, kwargs={}):
+        rotation=0, tol_overlap=10, center_clusters=True, scale_to_data=True, 
+        draw_points=True, kwargs={}):
         data = [[''.join(random.choices(string.ascii_letters, k=5)), random.randint(1, 1000)/10, random.randint(1, 100)/50] for _ in range(size)]
         df = pd.DataFrame(data, columns=['id', 'position', 'size'])
         return cls(df, 'id', 'position', min=min, max=max, size_field='size', order_field=None, 
             buffer=buffer, size_override=size_override, rotation=rotation, tol_overlap=tol_overlap, 
-            center_clusters=center_clusters, scale_to_data=scale_to_data, kwargs=kwargs)
+            center_clusters=center_clusters, scale_to_data=scale_to_data, draw_points=draw_points, kwargs=kwargs)
         
     def bee_swarm(self, df, id_field, position_field, min, max, size_field, 
-        order_field, buffer, size_override, rotation, tol_overlap, tol_r, kwargs):
+        order_field, buffer, size_override, rotation, tol_overlap, tol_r, 
+        draw_points, kwargs):
          # defaults
         defaults = {'sort':'desc', 'size_by':'area', 'order_by':'size',
             'mode':'closest'}
@@ -783,7 +795,7 @@ class beeswarm:
         o_ps = pathswarm(df=df, id_field=id_field, position_field=position_field,
             min=min, max=max, path=path, size_field=size_field, order_field=order_field,
             buffer=buffer, size_override=size_override, rotation=0,
-            tol_overlap=tol_overlap, tol_r=tol_r, interp=interp,
+            tol_overlap=tol_overlap, tol_r=tol_r, interp=interp, draw_points=draw_points,
             kwargs={'closed':False, 'horizon':None, 'sort':sort, 'order_by':order_by,
                 'offset':0., 'mode':mode, 'size_by': size_by})
         if self.center_clusters:

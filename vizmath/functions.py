@@ -23,7 +23,7 @@ def circle(xo, yo, r=1., points=50, spread=360., end_cap=False):
         angle += 1./points*spread
         path_i += 1
     if end_cap:
-        list_xy.append(list_xy[0])
+        list_xy.append((list_xy[0][0], list_xy[0][1], path_i))
     return list_xy
 
 def eq_triangle(xo, yo, side_length=1., area=None, end_cap=False):

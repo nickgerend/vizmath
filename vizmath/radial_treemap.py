@@ -402,15 +402,15 @@ class rad_treemap:
             self.df_rad_treemap = self.o_rad_treemap.df
         else:
             self.o_rad_treemap = self.__rad_treemap_legends(self.df, self.groupers, self.r1, self.a1, self.a2,
-                self.points, chart_width=1, legend_width=0.1, buffer=0.01)
+                self.points, chart_width=chart_width, legend_width=legend_width, buffer=buffer)
             self.df_rad_treemap = self.o_rad_treemap.df
             
-    def plot_level(self, level=1, opacity=0.5, line_level=0, mult=0):
-        fig, axs = self.__rad_tm_plot(self.df_rad_treemap, level=level, opacity=opacity, line_level=line_level, mult=mult)
+    def plot_level(self, level=1, opacity=0.5, line_level=0, mult=0, show=True):
+        fig, axs = self.__rad_tm_plot(self.df_rad_treemap, level=level, opacity=opacity, line_level=line_level, mult=mult, show=show)
         return fig, axs
 
-    def plot_levels(self, level=1, opacity=0.5, title='', axis='on', limit=0, fill='gray'):
-        fig, axs = self.__rad_tm_plot2(self.df_rad_treemap, level=level, opacity=opacity, title=title, axis=axis, limit=limit, fill=fill)
+    def plot_levels(self, level=1, opacity=0.5, title='', axis='on', limit=0, fill='gray', show=True):
+        fig, axs = self.__rad_tm_plot2(self.df_rad_treemap, level=level, opacity=opacity, title=title, axis=axis, limit=limit, fill=fill, show=show)
         return fig, axs
 
     def to_df(self):

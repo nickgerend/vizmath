@@ -820,7 +820,7 @@ class beeswarm:
             df_clip_center = vf.range_group(df_clip_center, item_col=id_field, min_col='__min', max_col='__max', group_name='__group')
             df_grouped = df_clip_center.groupby(['__group'])
             df_nodes = pd.DataFrame([{'id': obj.id, 'node_y': obj.node_y, 'node_radius': obj.node_radius} for obj in o_ps.nodes])
-            group_ids = {id: group_key for group_key, group_df in df_grouped for id in group_df['id'].unique()}
+            group_ids = {id: group_key for group_key, group_df in df_grouped for id in group_df[id_field].unique()}
             df_nodes['group'] = df_nodes['id'].map(group_ids)
             df_nodes['max_value'] = df_nodes.groupby('group')['node_y'].transform(lambda x: (x + df_nodes.loc[x.index, 'node_radius']).max())
             df_nodes['min_value'] = df_nodes.groupby('group')['node_y'].transform(lambda x: (x - df_nodes.loc[x.index, 'node_radius']).min())
@@ -836,9 +836,9 @@ class beeswarm:
                 x_rotated, y_rotated, placed_nodes_in_shadow = o_ps.node_filter(node)
                 if placed_nodes_in_shadow:
                     o_ps.place_node(node, x_rotated, y_rotated, radius, False, mode, placed_nodes_in_shadow)
-            # rotation
-            if rotation != 0:
-                o_ps.swarm_rotate(rotation)
+        # rotation
+        if rotation != 0:
+            o_ps.swarm_rotate(rotation)
         self.pathswarm = o_ps
 
     def plot_bee_swarm(self, plot_lines=True,  plot=True):

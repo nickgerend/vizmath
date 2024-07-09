@@ -74,14 +74,15 @@ class pathswarm:
     @classmethod
     def random_pathswarm(cls, size, min=None, max=None,
         buffer=0., size_override=None, direction_override=None,
-        rotation=0, tol_overlap=10, interp='cubic_spline', kwargs={}):
+        rotation=0, tol_overlap=10, interp='cubic_spline', draw_points=True, kwargs={}):
         data = [[''.join(random.choices(string.ascii_letters, k=5)), random.randint(1, 100)/50, random.randint(1, 100)/50] for _ in range(size)]
         df = pd.DataFrame(data, columns=['id', 'position', 'size'])
         path = cls.__generate_path()
         return cls(df, 'id', 'position', min=min, max=max, path=path,
             size_field='size', order_field=None, direction_field=None,
             buffer=buffer, size_override=size_override, direction_override=direction_override,
-            rotation=rotation, tol_overlap=tol_overlap, interp=interp, df_only=False, kwargs=kwargs)
+            rotation=rotation, tol_overlap=tol_overlap, interp=interp, df_only=False, 
+            draw_points=draw_points, kwargs=kwargs)
     
     @classmethod
     def random_path(cls):
@@ -539,8 +540,8 @@ class pathswarm:
                 for c in n_circle:
                     self.o_pathswarm.append(id=n.id, x=c[0], y=c[1], path=c[2], type='node')
                 # add path to circle lines
-                self.o_pathswarm.append(id=n.id, x=n.path_xo, y=n.path_yo, path=0)
-                self.o_pathswarm.append(id=n.id, x=n.node_x, y=n.node_y, path=0)
+                self.o_pathswarm.append(id=n.id, x=n.path_xo, y=n.path_yo, path=0, type='connection')
+                self.o_pathswarm.append(id=n.id, x=n.node_x, y=n.node_y, path=1, type='connection')
             
     def swarm_rotate(self, degrees):
         # path

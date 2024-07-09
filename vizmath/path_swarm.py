@@ -15,9 +15,11 @@ from matplotlib.patches import Circle
 
 from . import functions as vf
 from .draw import points as dp
+from .radial_treemap import rad_treemap as rt
 
 # import functions as vf
 # from draw import points as dp
+# from radial_treemap import rad_treemap as rt
 
 #%%
 
@@ -27,7 +29,7 @@ class pathswarm:
         min=None, max=None, path=[],
         size_field=None, order_field=None, direction_field=None,
         buffer=0., size_override=None, direction_override=None,
-        rotation=0, tol_overlap=10, tol_r=1e-10, interp='cubic_spline', df_only=False, 
+        rotation=0., tol_overlap=10, tol_r=1e-10, interp='cubic_spline', df_only=False, 
         draw_points=True, kwargs={}):
 
         self.df = df
@@ -77,9 +79,9 @@ class pathswarm:
         df = pd.DataFrame(data, columns=['id', 'position', 'size'])
         path = cls.__generate_path()
         return cls(df, 'id', 'position', min=min, max=max, path=path,
-        size_field='size', order_field=None, direction_field=None,
-        buffer=buffer, size_override=size_override, direction_override=direction_override,
-        rotation=rotation, tol_overlap=tol_overlap, interp=interp, df_only=False, kwargs=kwargs)
+            size_field='size', order_field=None, direction_field=None,
+            buffer=buffer, size_override=size_override, direction_override=direction_override,
+            rotation=rotation, tol_overlap=tol_overlap, interp=interp, df_only=False, kwargs=kwargs)
     
     @classmethod
     def random_path(cls):
@@ -622,7 +624,7 @@ class superswarm:
 
     def __init__(self, df, id_field, position_field, 
         min=None, max=None, size_field=None, order_field=None, 
-        buffer=0., size_override=None, rotation=0, tol_overlap=10, tol_r=1e-10,
+        buffer=0., size_override=None, rotation=0., tol_overlap=10, tol_r=1e-10,
         shape='c', draw_points=True, kwargs={}):
         
         self.df = df
@@ -725,7 +727,7 @@ class beeswarm:
 
     def __init__(self, df, id_field, position_field, min=None, max=None,
         size_field=None, order_field=None, buffer=0., size_override=None, 
-        rotation=0, tol_overlap=10, tol_r=1e-10, center_clusters=True, scale_to_data=True, 
+        rotation=0., tol_overlap=10, tol_r=1e-10, center_clusters=True, scale_to_data=True, 
         draw_points=True, kwargs={}):
         
         self.df = df
@@ -841,5 +843,326 @@ class beeswarm:
             o_ps.swarm_rotate(rotation)
         self.pathswarm = o_ps
 
-    def plot_bee_swarm(self, plot_lines=True,  plot=True):
+    def plot_bee_swarm(self, plot_lines=True, plot=True):
         return self.pathswarm.plot_path_swarm(plot_lines=plot_lines,  plot=plot)
+
+class radswarm:
+
+    def __init__(self, df, groupers, position_field,
+            min=None, max=None, path=[],
+            size_field=None, order_field=None, direction_field=None,
+            buffer=0., size_override=None, direction_override=None,
+            rotation=0., tol_overlap=10, tol_r=1e-10, interp='cubic_spline',
+            draw_points=True, r1_factor=2., a1=0., a2=360., rad_points=200, 
+            default_sort=False, default_sort_override=True,
+            default_sort_override_reversed=True,
+            mode='smart', rad_rotation=0., kwargs={}):
+        
+        self.df = df
+        self.groupers = groupers
+        self.position_field = position_field
+        self.min = min
+        self.max = max
+        self.path = path
+        self.size_field = size_field
+        self.order_field = order_field
+        self.direction_field = direction_field
+        self.buffer = buffer
+        self.size_override = size_override
+        self.direction_override = direction_override
+        self.rotation = rotation
+        self.tol_overlap = tol_overlap
+        self.tol_r = tol_r
+        self.interp = interp
+        self.draw_points = draw_points
+
+        self.r1_factor = r1_factor
+        self.a1 = a1
+        self.a2 = a2
+        self.rad_points = rad_points
+        self.default_sort = default_sort
+        self.default_sort_override = default_sort_override
+        self.default_sort_override_reversed  = default_sort_override_reversed
+        self.mode = mode
+        self.rad_rotation = rad_rotation
+
+        self.kwargs = kwargs
+
+        self.pathswarm = None
+        self.radtreemap = None
+        self.rad_swarm()
+
+    @classmethod
+    def random_radswarm(cls, num_top_level_items=20, num_levels=4, value_range_h=(.01,5), 
+        value_range_p=(.1,1), sig_h=3, sig_p=3, outlier_fraction_h=0.2, outlier_fraction_p=0, 
+        use_log_h=True, use_log_p=True, items_range_p=(10,15), data_only=False,
+        min=None, max=None, path=[], order_field=None, direction_field=None,
+        buffer=0., size_override=None, direction_override=None,
+        rotation=0, tol_overlap=10, tol_r=1e-10, interp='cubic_spline',
+        draw_points=True, r1_factor = 2, a1 = 0, a2 = 360, rad_points = 200, 
+        default_sort = False, default_sort_override = True,
+        default_sort_override_reversed = True,
+        mode = 'smart', rad_rotation = 0, kwargs={}):
+
+        df_h = rt.random_rad_treemap(data_only=True, num_top_level_items=num_top_level_items,
+            num_levels=num_levels, value_range=value_range_h, sig=sig_h, 
+            outlier_fraction=outlier_fraction_h, use_log=use_log_h)
+        df_p = rt.random_rad_treemap(data_only=True, num_top_level_items=num_top_level_items, 
+            num_levels=1, value_range=value_range_p, sig=sig_p, items_range=items_range_p,
+            outlier_fraction=outlier_fraction_p, use_log=use_log_p)
+        df_p = df_p.rename(columns={'value': 'position'})
+        df = df_h.merge(df_p, on='a', how='left')
+        if data_only:
+            return df
+        else:
+            if path == []:
+                path = pathswarm.random_path()
+            groupers = [chr(97 + i) for i in range(num_levels)]
+            return cls(df, groupers, position_field='position',
+                min=min, max=max, path=path,
+                size_field='value', order_field=order_field, direction_field=direction_field,
+                buffer=buffer, size_override=size_override, direction_override=direction_override,
+                rotation=rotation, tol_overlap=tol_overlap, tol_r=tol_r, interp=interp,
+                draw_points=draw_points, r1_factor=r1_factor, a1=a1, a2=a2, rad_points=rad_points, 
+                default_sort=default_sort, default_sort_override=default_sort_override,
+                default_sort_override_reversed=default_sort_override_reversed,
+                mode=mode, rad_rotation=rad_rotation, kwargs=kwargs)
+
+    def rad_swarm(self):
+        top_field = self.groupers[0]
+        bottom_fields = self.groupers[1:]
+        top_level = self.df.groupby(top_field).agg({self.size_field: 'sum', self.position_field: 'max'}).reset_index()
+        o_ps = pathswarm(top_level, top_field, self.position_field, min=self.min, max=self.max, path=self.path, order_field=self.order_field, 
+            size_field=self.size_field, direction_field=self.direction_field, buffer=self.buffer, size_override=self.size_override,
+            direction_override=self.direction_override, rotation=self.rotation, tol_overlap=self.tol_overlap, tol_r=self.tol_r,
+            interp=self.interp, draw_points=self.draw_points, kwargs=self.kwargs)
+        o_ps.o_pathswarm.to_dataframe()
+
+        o_ps_df = o_ps.o_pathswarm.df[o_ps.o_pathswarm.df['type']=='node'][['id','x','y','path']].copy(deep=True)
+        o_ps_df.rename({'id': 'group'}, axis=1, inplace=True)
+
+        treemaps = [o_ps_df]
+        for n in o_ps.nodes:
+            id = n.id
+            x = n.node_x
+            y = n.node_y
+            df_tm = self.df.loc[self.df[top_field]==id].copy(deep=True)
+            o_rt = rt(df_tm, bottom_fields, self.size_field, r1=n.node_radius/self.r1_factor, r2=n.node_radius,
+                a1=self.a1, a2=self.a2, points=self.rad_points, default_sort=self.default_sort, default_sort_override=self.default_sort_override,
+                default_sort_override_reversed=self.default_sort_override_reversed, mode=self.mode, rotate_deg=self.rad_rotation)
+            o_rt.o_rad_treemap.df['group'] = o_rt.o_rad_treemap.df['group'].apply(
+                lambda x: (id,) + tuple(x.split(',')) if isinstance(x, str) else (id,) + x)
+            o_rt.o_rad_treemap.df[['x','y']] = o_rt.o_rad_treemap.df.apply(lambda row: (row['x']+x, row['y']+y), axis=1, result_type='expand')
+            treemaps.append(o_rt.o_rad_treemap.df[['group','x','y','path']])
+        pqt_tm = pd.concat(treemaps, axis=0)
+        
+        # treemap attributes
+        o_rt = rt(self.df, self.groupers, self.size_field, r1=0, r2=1, a1=0, a2=360)
+        o_rt.o_rad_treemap.df.drop_duplicates(subset=['count','group','level','level_rank','overall_rank','value'], inplace=True)
+        tma = o_rt.o_rad_treemap.df[['count','group','level','level_rank','overall_rank','value']].copy(deep=True)
+        pqt_tm_df = pd.merge(pqt_tm, tma, how ='left', on ='group')
+        o_rt.df_rad_treemap = pqt_tm_df
+        if self.rotation != 0:
+            rotate = -self.rotation
+            o_rt.df_rad_treemap[['x', 'y']] = o_rt.df_rad_treemap.apply(lambda row: 
+                (
+                (cos(radians(rotate)) * (row['x']) - sin(radians(rotate)) * (row['y'])),
+                (sin(radians(rotate)) * (row['x']) + cos(radians(rotate)) * (row['y']))
+                ), axis=1, result_type='expand')
+        self.pathswarm = o_ps
+        self.radtreemap = o_rt
+
+    def plot_rad_swarm(self, plot_lines=True, plot=True):
+        plt.ioff()
+        fig, axs = self.radtreemap.plot_level(level=4, show=False)
+        path_x, path_y = zip(*self.pathswarm.i_path)
+        axs.plot(path_x, path_y, 'k-', label='Path', zorder=1)
+        if plot_lines:
+            for n in self.pathswarm.nodes:
+                # plot tangent lines
+                xs, ys = zip(*((n.path_xo, n.path_yo), (n.node_x, n.node_y))) 
+                axs.plot(xs, ys, 'b-', linewidth=0.5, zorder=2)
+        if plot:
+            plt.show()
+        return fig, axs
+
+class hyperswarm:
+
+    def __init__(self, df, groupers, positioners, offset=0.,
+        min=None, max=None, path=[],
+        size_field=None, order_field=None, direction_field=None,
+        buffer=0., size_override=None, direction_override=None,
+        rotation=0., tol_overlap=10, tol_r=1e-10, interp='cubic_spline',
+        draw_points=True, top_level_as_path=False, kwargs={}):
+
+        self.df = df
+        self.groupers = groupers
+        self.positioners = positioners
+        self.offset = offset
+        self.min = min
+        self.max = max
+        self.path = path
+        self.size_field = size_field
+        self.order_field = order_field
+        self.direction_field = direction_field
+        self.buffer = buffer
+        self.size_override = size_override
+        self.direction_override = direction_override
+        self.rotation = rotation
+        self.tol_overlap = tol_overlap
+        self.tol_r = tol_r
+        self.interp = interp
+        self.draw_points = draw_points
+        self.top_level_as_path = top_level_as_path
+        self.kwargs = kwargs
+
+        self.hyperswarm = None
+
+        if top_level_as_path:
+            self.path_hyper_swarm(df, groupers, positioners, size_field, offset,
+                min, max, path, order_field, direction_field,
+                buffer, size_override, direction_override,
+                rotation, tol_overlap, tol_r, interp,
+                draw_points, top_level_as_path, kwargs)
+        else:
+            self.hyper_swarm(df, groupers, positioners, size_field, offset)
+
+    @classmethod
+    def random_hyperswarm(cls, num_top_level_items=5, num_levels=3, value_range_h=(.01,5), 
+        value_range_p=(.1,1), sig_h=3, sig_p=3, outlier_fraction_h=0.2, outlier_fraction_p=0, 
+        use_log_h=True, use_log_p=True, items_range_h=(5,10), data_only=False,
+        offset=0., min=None, max=None, path=[],
+        order_field=None, direction_field=None,
+        buffer=0., size_override=None, direction_override=None,
+        rotation=0., tol_overlap=10, tol_r=1e-10, interp='cubic_spline',
+        draw_points=True, top_level_as_path=False, kwargs={}):
+        
+        df_h = rt.random_rad_treemap(data_only=True, num_top_level_items=num_top_level_items,
+            num_levels=num_levels, value_range=value_range_h, sig=sig_h, items_range=items_range_h,
+            outlier_fraction=outlier_fraction_h, use_log=use_log_h)
+        groupers = [chr(97 + i) for i in range(num_levels)]
+        df = df_h.copy(deep=True)
+        for g in groupers:
+            df_g = df_h.groupby(g).size().reset_index()[[g]]
+            df_p = rt.random_rad_treemap(data_only=True, num_top_level_items=df_h.shape[0], 
+            num_levels=1, value_range=value_range_p, sig=sig_p,
+            outlier_fraction=outlier_fraction_p, use_log=use_log_p)
+            df_p = df_p.rename(columns={'value': 'position'})
+            df_g[g + '_position'] = df_p['position']
+            df = df.merge(df_g, on=g, how='left')
+        if data_only:
+            return df
+        else:
+            if top_level_as_path:
+                if path == []:
+                    path = pathswarm.random_path()
+            positioners = [g + '_position' for g in groupers]
+            return cls(df=df, groupers=groupers, positioners=positioners, offset=offset,
+                min=min, max=max, path=path,
+                size_field='value', order_field=order_field, direction_field=direction_field,
+                buffer=buffer, size_override=size_override, direction_override=direction_override,
+                rotation=rotation, tol_overlap=tol_overlap, tol_r=tol_r, interp=interp,
+                draw_points=draw_points, top_level_as_path=top_level_as_path, kwargs=kwargs)
+
+    def hyper_swarm(self, df, groupers, positioners, size_field, offset):
+        group_by = []
+        pos = 0
+        ss_d = {}
+        parent = ['']
+        xo, yo = 0., 0.
+        for g in groupers:
+            group_by.append(g)
+            position_field = positioners[pos]
+            df_gb = df.groupby(group_by).agg({size_field: 'sum', position_field: 'max'}).reset_index()
+            df_gb['__id'] = df_gb.apply(lambda row: '_'.join([str(row[col]) for col in group_by]), axis=1)
+            df_gb['__parent'] = df_gb['__id'].apply(lambda x: x.rpartition('_')[0] if '_' in x else '')
+            for p in parent:
+                df_p = df_gb[df_gb['__parent'] == p].copy(deep=True)
+                df_p['__g_parent'] = df_p['__parent'].apply(lambda x: x.rpartition('_')[0] if '_' in x else '')
+                gp = df_p['__g_parent'].unique()[0]
+                if gp in ss_d:
+                    gp_ss = ss_d[gp]
+                    parent_node = next((n for n in gp_ss.pathswarm.nodes if n.id == p), None)
+                    xo, yo = parent_node.node_x, parent_node.node_y
+                o_ss = superswarm(df_p, '__id', position_field, size_field=size_field, kwargs={'offset':offset})
+                parent_path = [(x + xo, y + yo) for x, y in o_ss.pathswarm.i_path]
+                o_ss.pathswarm.i_path = parent_path
+                for n in o_ss.pathswarm.nodes:
+                    n.node_x += xo
+                    n.node_y += yo
+                    n.path_xo += xo
+                    n.path_yo += yo
+                ss_d[p] = o_ss
+            parent = df_gb['__id'].unique().tolist()
+            pos += 1
+        self.hyper_swarm = ss_d
+
+    def path_hyper_swarm(self, df, groupers, positioners, size_field, offset,
+            min, max, path, order_field, direction_field,
+            buffer, size_override, direction_override,
+            rotation, tol_overlap, tol_r, interp,
+            draw_points, top_level_as_path, kwargs):
+        group_by = []
+        pos = 0
+        ss_d = {}
+        parent = ['']
+        xo, yo = 0., 0.
+        for g in groupers:
+            group_by.append(g)
+            position_field = positioners[pos]
+            df_gb = df.groupby(group_by).agg({size_field: 'sum', position_field: 'max'}).reset_index()
+            df_gb['__id'] = df_gb.apply(lambda row: '_'.join([str(row[col]) for col in group_by]), axis=1)
+            df_gb['__parent'] = df_gb['__id'].apply(lambda x: x.rpartition('_')[0] if '_' in x else '')
+            for p in parent:
+                df_p = df_gb[df_gb['__parent'] == p].copy(deep=True)
+                df_p['__g_parent'] = df_p['__parent'].apply(lambda x: x.rpartition('_')[0] if '_' in x else '')
+                gp = df_p['__g_parent'].unique()[0]
+                if gp in ss_d:
+                    gp_ss = ss_d[gp]
+                    if pos == 1:
+                        parent_node = next((n for n in gp_ss.nodes if n.id == p), None)
+                    else:
+                        parent_node = next((n for n in gp_ss.pathswarm.nodes if n.id == p), None)
+                    xo, yo = parent_node.node_x, parent_node.node_y
+                if pos == 0:
+                    o_ss = pathswarm(df_p, '__id', position_field, size_field=size_field, min=min, max=max, path=path,
+                        order_field=order_field, direction_field=direction_field,
+                        buffer=buffer, size_override=size_override, direction_override=direction_override,
+                        rotation=rotation, tol_overlap=tol_overlap, tol_r=tol_r, interp=interp,
+                        draw_points=draw_points, kwargs=kwargs)
+                else:
+                    o_ss = superswarm(df_p, '__id', position_field, size_field=size_field, kwargs={'offset':offset})
+                    parent_path = [(x + xo, y + yo) for x, y in o_ss.pathswarm.i_path]
+                    o_ss.pathswarm.i_path = parent_path
+                    for n in o_ss.pathswarm.nodes:
+                        n.node_x += xo
+                        n.node_y += yo
+                        n.path_xo += xo
+                        n.path_yo += yo
+                ss_d[p] = o_ss
+            parent = df_gb['__id'].unique().tolist()
+            pos += 1
+        self.hyper_swarm = ss_d
+
+    def plot_hyper_swarm(self, plot_lines=True,  plot=True):
+        fig, axs = plt.subplots()
+        for key, ss in self.hyper_swarm.items():
+            if key == '' and self.top_level_as_path: # plot path
+                path_x, path_y = zip(*ss.i_path)
+                nodes = ss.nodes
+            else:
+                path_x, path_y = zip(*ss.pathswarm.i_path)
+                nodes = ss.pathswarm.nodes
+            axs.plot(path_x, path_y, 'k-', label='Path', zorder=1)
+            # plot circles
+            for n in nodes:
+                # plot tangent lines
+                if plot_lines:
+                    xs, ys = zip(*((n.path_xo, n.path_yo), (n.node_x, n.node_y))) 
+                    axs.plot(xs, ys, 'b-', linewidth=0.5, zorder=2)
+                circle = Circle((n.node_x, n.node_y), n.node_radius - n.node_radius_buffer, fc='white', edgecolor='black', linewidth=1, alpha=0.9, zorder=3)
+                axs.add_patch(circle)
+        axs.axis('equal')
+        if plot:
+            plt.show()
+        return fig, axs

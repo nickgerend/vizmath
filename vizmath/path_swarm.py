@@ -896,7 +896,7 @@ class radswarm:
     @classmethod
     def random_radswarm(cls, num_top_level_items=20, num_levels=4, value_range_h=(.01,5), 
         value_range_p=(.1,1), sig_h=3, sig_p=3, outlier_fraction_h=0.2, outlier_fraction_p=0, 
-        use_log_h=True, use_log_p=True, items_range_p=(10,15), data_only=False,
+        use_log_h=True, use_log_p=True, items_range_h=(10,15), data_only=False,
         min=None, max=None, path=[], order_field=None, direction_field=None,
         buffer=0., size_override=None, direction_override=None,
         rotation=0, tol_overlap=10, tol_r=1e-10, interp='cubic_spline',
@@ -906,10 +906,10 @@ class radswarm:
         mode = 'smart', rad_rotation = 0, kwargs={}):
 
         df_h = rt.random_rad_treemap(data_only=True, num_top_level_items=num_top_level_items,
-            num_levels=num_levels, value_range=value_range_h, sig=sig_h, 
+            num_levels=num_levels, value_range=value_range_h, sig=sig_h, items_range=items_range_h,
             outlier_fraction=outlier_fraction_h, use_log=use_log_h)
         df_p = rt.random_rad_treemap(data_only=True, num_top_level_items=num_top_level_items, 
-            num_levels=1, value_range=value_range_p, sig=sig_p, items_range=items_range_p,
+            num_levels=1, value_range=value_range_p, sig=sig_p,
             outlier_fraction=outlier_fraction_p, use_log=use_log_p)
         df_p = df_p.rename(columns={'value': 'position'})
         df = df_h.merge(df_p, on='a', how='left')
@@ -973,9 +973,11 @@ class radswarm:
         self.pathswarm = o_ps
         self.radtreemap = o_rt
 
-    def plot_rad_swarm(self, plot_lines=True, plot=True):
+    def plot_rad_swarm(self, plot_lines=True, plot=True, level=None):
+        if level is None:
+            level = len(self.groupers)
         plt.ioff()
-        fig, axs = self.radtreemap.plot_level(level=4, show=False)
+        fig, axs = self.radtreemap.plot_level(level=level, show=False)
         path_x, path_y = zip(*self.pathswarm.i_path)
         axs.plot(path_x, path_y, 'k-', label='Path', zorder=1)
         if plot_lines:
@@ -1075,11 +1077,11 @@ class hyperswarm:
             group_by.append(g)
             position_field = positioners[pos]
             df_gb = df.groupby(group_by).agg({size_field: 'sum', position_field: 'max'}).reset_index()
-            df_gb['__id'] = df_gb.apply(lambda row: '_'.join([str(row[col]) for col in group_by]), axis=1)
-            df_gb['__parent'] = df_gb['__id'].apply(lambda x: x.rpartition('_')[0] if '_' in x else '')
+            df_gb['__id'] = df_gb.apply(lambda row: ','.join([str(row[col]) for col in group_by]), axis=1)
+            df_gb['__parent'] = df_gb['__id'].apply(lambda x: x.rpartition(',')[0] if ',' in x else '')
             for p in parent:
                 df_p = df_gb[df_gb['__parent'] == p].copy(deep=True)
-                df_p['__g_parent'] = df_p['__parent'].apply(lambda x: x.rpartition('_')[0] if '_' in x else '')
+                df_p['__g_parent'] = df_p['__parent'].apply(lambda x: x.rpartition(',')[0] if ',' in x else '')
                 gp = df_p['__g_parent'].unique()[0]
                 if gp in ss_d:
                     gp_ss = ss_d[gp]
@@ -1096,7 +1098,7 @@ class hyperswarm:
                 ss_d[p] = o_ss
             parent = df_gb['__id'].unique().tolist()
             pos += 1
-        self.hyper_swarm = ss_d
+        self.hyperswarm = ss_d
 
     def path_hyper_swarm(self, df, groupers, positioners, size_field, offset,
             min, max, path, order_field, direction_field,
@@ -1112,11 +1114,11 @@ class hyperswarm:
             group_by.append(g)
             position_field = positioners[pos]
             df_gb = df.groupby(group_by).agg({size_field: 'sum', position_field: 'max'}).reset_index()
-            df_gb['__id'] = df_gb.apply(lambda row: '_'.join([str(row[col]) for col in group_by]), axis=1)
-            df_gb['__parent'] = df_gb['__id'].apply(lambda x: x.rpartition('_')[0] if '_' in x else '')
+            df_gb['__id'] = df_gb.apply(lambda row: ','.join([str(row[col]) for col in group_by]), axis=1)
+            df_gb['__parent'] = df_gb['__id'].apply(lambda x: x.rpartition(',')[0] if ',' in x else '')
             for p in parent:
                 df_p = df_gb[df_gb['__parent'] == p].copy(deep=True)
-                df_p['__g_parent'] = df_p['__parent'].apply(lambda x: x.rpartition('_')[0] if '_' in x else '')
+                df_p['__g_parent'] = df_p['__parent'].apply(lambda x: x.rpartition(',')[0] if ',' in x else '')
                 gp = df_p['__g_parent'].unique()[0]
                 if gp in ss_d:
                     gp_ss = ss_d[gp]
@@ -1143,11 +1145,20 @@ class hyperswarm:
                 ss_d[p] = o_ss
             parent = df_gb['__id'].unique().tolist()
             pos += 1
-        self.hyper_swarm = ss_d
+        self.hyperswarm = ss_d
 
-    def plot_hyper_swarm(self, plot_lines=True,  plot=True):
+    def plot_hyper_swarm(self, plot_lines=True, plot=True, level=None):
+
+        if level is None:
+            level = len(self.groupers)
+
+        def key_level(key):
+            return key.count(',') + 2 if key != '' else 1
+
+        hs_leveled = {k: v for k, v in self.hyperswarm.items() if key_level(k) <= level}
+
         fig, axs = plt.subplots()
-        for key, ss in self.hyper_swarm.items():
+        for key, ss in hs_leveled.items():
             if key == '' and self.top_level_as_path: # plot path
                 path_x, path_y = zip(*ss.i_path)
                 nodes = ss.nodes

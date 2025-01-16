@@ -1,6 +1,6 @@
 # vizmath
 
-![vizmath](assets/vizmath_0_0_38.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/vizmath_0_0_38.jpg)
 Library of unique visualization algorithms. From time to time, I like to come up with fun new ways to visualize data and turn those ideas into python code!
 
 ## install
@@ -16,7 +16,7 @@ Dependencies:
 ## viz methods
 ### Path-Swarm
 Elements:
-![vizmath](assets/ps_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/ps_1.jpg)
 
 Input data:
 ```
@@ -47,7 +47,7 @@ o_ps_radius = ps(df=df, id_field='id', position_field='position',
 o_ps_area.plot_path_swarm()
 o_ps_radius.plot_path_swarm()
 ```
-![vizmath](assets/path_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/path_swarm_1.jpg)
 
 Shape-axis and Buffer properties:
 ```
@@ -62,7 +62,7 @@ o_ps_90_buffer = ps(df=df, id_field='id', position_field='position',
 o_ps_90.plot_path_swarm()
 o_ps_90_buffer.plot_path_swarm()
 ```
-![vizmath](assets/path_swarm_2.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/path_swarm_2.jpg)
 
 Horizon and Path-offset parameters:
 ```
@@ -81,7 +81,7 @@ o_ps_top.plot_path_swarm()
 o_ps_bottom.plot_path_swarm()
 o_ps_bottom_offset.plot_path_swarm()
 ```
-![vizmath](assets/path_swarm_3.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/path_swarm_3.jpg)
 
 Output:
 ```
@@ -93,7 +93,7 @@ df[df['type']=='path'][-6:]
 df[df['type']=='node'][-6:]
 df[df['type']=='connection'][-6:]
 ```
-![vizmath](assets/path_swarm_4.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/path_swarm_4.jpg)
 
 #### Super-Swarm:
 ```
@@ -110,7 +110,7 @@ o_ss_circle.plot_super_swarm()
 o_ss_triangle.plot_super_swarm()
 o_ss_pentagon.plot_super_swarm()
 ```
-![vizmath](assets/super_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/super_swarm_1.jpg)
 
 Max parameter:
 ```
@@ -123,7 +123,7 @@ o_ss_circle_half= ss(df=df, id_field='id', position_field='position',
 # plot the chart
 o_ss_circle_half.plot_super_swarm()
 ```
-![vizmath](assets/super_swarm_2.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/super_swarm_2.jpg)
 
 Custom Path Swarm:
 ```
@@ -149,7 +149,7 @@ o_ss_custom = ps(df=df, id_field='id', position_field='position',
 # plot the chart
 o_ss_custom.plot_path_swarm()
 ```
-![vizmath](assets/super_swarm_3.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/super_swarm_3.jpg)
 
 #### Bee-Swarm
 ```
@@ -164,7 +164,7 @@ o_bs = bs(df=df, id_field='id', position_field='position',
 # plot the chart (repeat for each sizing above)
 o_bs.plot_bee_swarm()
 ```
-![vizmath](assets/bee_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/bee_swarm_1.jpg)
 
 #### Boundary-Swarm
 ```
@@ -185,7 +185,7 @@ o_ps_top = ps(df, 'id', 'position', size_field='size',
 o_ps_bottom.plot_path_swarm()
 o_ps_top.plot_path_swarm()
 ```
-![vizmath](assets/boundary_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/boundary_swarm_1.jpg)
 
 #### Trend-Swarm
 ```
@@ -214,7 +214,7 @@ o_ps_trend_offset = ps(df, 'id', 'position', size_field='event',
 o_ps_trend.plot_path_swarm()
 o_ps_trend_offset.plot_path_swarm()
 ```
-![vizmath](assets/trend_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/trend_swarm_1.jpg)
 
 #### Rad-Swarm
 ```
@@ -233,7 +233,7 @@ o_rs.plot_rad_swarm()
 # the underlying path swarm and radial treemap inputs can be adjusted 
 # as needed to initialize a normal object: o_rs = rs(inputs...)
 ```
-![vizmath](assets/rad_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/rad_swarm_1.jpg)
 
 Look at each level:
 ```
@@ -253,7 +253,7 @@ df_rad_swarm = o_rs.radtreemap.df_rad_treemap
 o_rs.pathswarm.o_pathswarm.to_dataframe()
 df_path_swarm = o_rs.pathswarm.o_pathswarm.df
 ```
-![vizmath](assets/rad_swarm_2.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/rad_swarm_2.jpg)
 
 #### Hyper Swarm
 ```
@@ -271,14 +271,14 @@ o_hs.plot_hyper_swarm()
 # the underlying super swarm inputs can be adjusted as needed
 # to initialize a normal object: o_hs = hs(inputs...)
 ```
-![vizmath](assets/hyper_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/hyper_swarm_1.jpg)
 
 #### Hyper-Path-Swarm
 ```
 o_hs = hs.random_hyperswarm(top_level_as_path=True)
 o_hs.plot_hyper_swarm()
 ```
-![vizmath](assets/hyper_path_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/hyper_path_swarm_1.jpg)
 
 #### Jitter-Swarm
 ```
@@ -342,7 +342,7 @@ axs.set_yticklabels([])
 plt.tight_layout()
 plt.show()
 ```
-![vizmath](assets/jitter_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/jitter_swarm_1.jpg)
 
 #### 3D Swarm
 ```
@@ -484,7 +484,7 @@ if collision_exists:
 else:
     print('No collision detected.')
 ```
-![vizmath](assets/3d_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/3d_swarm_1.jpg)
 
 #### 3D Path-Swarm projection
 ```
@@ -535,14 +535,14 @@ ax.set_zlabel('Z')
 set_axes_equal(ax)
 plt.show()
 ```
-![vizmath](assets/3d_path_swarm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/3d_path_swarm_1.jpg)
 
 ### Radial-Treemaps
-![vizmath](assets/rad_tm_1.gif)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/rad_tm_1.gif)
 (Tableau Public implementation)
 
 Layouts:
-![vizmath](assets/rad_tm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/rad_tm_1.jpg)
 
 Simple Radial-Treemap:
 ```
@@ -578,7 +578,7 @@ rt_1 = rt(df=df, groupers=['a','b','c'], value='value', r1=0.5, r2=1,
 # plot the Radial Treemap
 rt_1.plot_levels(level=3, fill='w')
 ```
-![vizmath](assets/rad_tm_2.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/rad_tm_2.jpg)
 
 Output:
 ```
@@ -586,7 +586,7 @@ Output:
 rt_1.to_df()[['level','group','count','value',
     'level_rank','overall_rank','x','y','path']].head()
 ```
-![vizmath](assets/rad_tm_3.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/rad_tm_3.jpg)
 
 By counts:
 ```
@@ -600,11 +600,11 @@ rt_2 = rt(df=df, groupers=['a','b','c'], value=None, r1=0.5, r2=1,
 # plot the Radial Treemap
 rt_2.plot_levels(level=3, fill='w')
 ```
-![vizmath](assets/rad_tm_4.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/rad_tm_4.jpg)
 
 ### Crystal-Bar
 Elements:
-![vizmath](assets/c_bar_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/c_bar_1.jpg)
 
 Sequential Differential Clustering:
 
@@ -627,7 +627,7 @@ print(num_bins) # 29
 df['value'].hist(bins=num_bins, color='w', edgecolor='black', 
   linewidth=1.2, grid=False, figsize=(7,1.5))
 ```
-![vizmath](assets/cb_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/cb_1.jpg)
 
 With a Bee-Swarm:
 ```
@@ -642,7 +642,7 @@ df = pd.DataFrame(data=data)
 bs = swarm(df, 'id', 'value', None, size_override=pi*(5/2)**2)
 bs.beeswarm_plot(color=False)
 ```
-![vizmath](assets/cb_2.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/cb_2.jpg)
 
 With a Crystal Bar Chart:
 ```
@@ -656,7 +656,7 @@ df = pd.DataFrame(data=data)
 cbc = crystals(df, 'id', 'value', 5, width_override=5, rotation=90)
 cbc.cbc_plot(legend=False, alternate_color=True, color=False)
 ```
-![vizmath](assets/cb_3.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/cb_3.jpg)
 
 Size property:
 ```
@@ -664,7 +664,7 @@ Size property:
 cbc = crystals(df, 'id', 'value', 5, width_field='size', rotation=90)
 cbc.cbc_plot(legend=False, alternate_color=True, color=False)
 ```
-![vizmath](assets/cb_4.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/cb_4.jpg)
 
 Offset property:
 ```
@@ -673,29 +673,29 @@ cbc = crystals(df, 'id', 'value', 5, width_override=5,
     rotation=90, offset=21) # new offset
 cbc.cbc_plot(legend=False, alternate_color=True, color=False)
 ```
-![vizmath](assets/cb_5.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/cb_5.jpg)
 
 Clusters:
 
-![vizmath](assets/c_bar_1.gif)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/c_bar_1.gif)
 (Tableau Public implementation)
 
 Containers:
 
-![vizmath](assets/cb_6.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/cb_6.jpg)
 
 ### Quad-Tile
 My initial approach (V1) didn’t consider a container, where the new approach (V2) does.
 
 #### Quad-Tile V1
 V1 Concept:
-![vizmath](assets/tile_0.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/tile_0.jpg)
 
 V1 Elements:
-![vizmath](assets/tile_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/tile_1.jpg)
 
 V1 Layouts:
-![vizmath](assets/tile_2.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/tile_2.jpg)
 
 V1 Example:
 ```
@@ -730,14 +730,14 @@ qt_o_width = qt(df,'id','speed', size_by='width', buffer=0)
 qt_o_area.quadtile_plot(color='quad', cw=0.75, opacity=.9)
 qt_o_width.quadtile_plot(color='quad', cw=0.75, opacity=.9)
 ```
-![vizmath](assets/tile_3.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/tile_3.jpg)
 
 #### Quad-Tile V2
 V2 Elements:
-![vizmath](assets/qt_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/qt_1.jpg)
 
 V2 Layouts:
-![vizmath](assets/qt_2.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/qt_2.jpg)
 
 V2 Example:
 ```
@@ -778,7 +778,7 @@ pqt_o_width = pqt(df,'id','speed', size_by='width', buffer=0)
 pqt_o_area.polyquadtile_plot(color='quad', cw=0.75, opacity=.9)
 pqt_o_width.polyquadtile_plot(color='quad', cw=0.75, opacity=.9)
 ```
-![vizmath](assets/qt_3.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/qt_3.jpg)
 
 V1 vs V2 and simple containers:
 ```
@@ -808,7 +808,7 @@ pqt_o3 = pqt.random_polyquadtile(1000, constraints=[(1,1)],
     buffer=0, rotate=0)
 pqt_o3.polyquadtile_plot(color='quad', cw=0.75, opacity=.9, circles=False)
 ```
-![vizmath](assets/qt_4.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/qt_4.jpg)
 
 More complicated (random) containers examples:
 ```
@@ -818,7 +818,7 @@ pqt_o.polyquadtile_plot(color='quad', cw=0.75, opacity=.9, circles=True,
 
 # keep executing for random containers with randomly sized squares
 ```
-![vizmath](assets/qt_5.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/qt_5.jpg)
 
 By aspect ratio:
 ```
@@ -827,7 +827,7 @@ pqt_o = pqt.random_polyquadtile(100, constraints=[aspect_ratio],
     rotate=45, collapse=True, buffer=.02)
 pqt_o.polyquadtile_plot(color='quad', cw=0.75, opacity=.9)
 ```
-![vizmath](assets/qt_8.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/qt_8.jpg)
 
 Outputs:
 ```
@@ -853,7 +853,7 @@ o_pq1.o_polyquadtile_chart.df[['id','item','a','w','x','y','path']].head()
 # size by width:
 o_pq2.o_polyquadtile_chart.df[['id','item','a','w','x','y','path']].head()
 ```
-![vizmath](assets/qt_6.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/qt_6.jpg)
 
 Centroids:
 ```
@@ -862,7 +862,7 @@ o_pq1.o_polysquares.df[['id','a','w','x','y']].head()
 # size by width:
 o_pq2.o_polysquares.df[['id','a','w','x','y']].head()
 ```
-![vizmath](assets/qt_7.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/qt_7.jpg)
 
 #### Squaremap
 ```
@@ -904,7 +904,7 @@ df = pd.DataFrame(data, columns = ['a', 'b', 'c', 'value'])
 o_sm2 = sm(df, ['a','b','c'], 'value', constraints=[(1,1)], buffer=.2)
 o_sm2.o_squaremap.plot_levels(level=3, fill='w')
 ```
-![vizmath](assets/sm_1.jpg)
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/sm_1.jpg)
 
 ## coming soon
 Planning to retire the dataoutsider package and move over my multi-chord diagram to vizmath, with many more new algorithms to come! - as time permits `:)`

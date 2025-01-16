@@ -1,6 +1,7 @@
 # vizmath
 
 ![vizmath](assets/vizmath_0_0_38.jpg)
+Library of unique visualization algorithms. From time to time, I like to come up with fun new ways to visualize data and turn those ideas into python code!
 
 ## install
 pip install vizmath

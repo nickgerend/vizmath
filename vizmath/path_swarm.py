@@ -1,8 +1,5 @@
-# Copyright (c) 2023-2024, Nick Gerend
-# This file is part of the vizmath library, distributed under a Dual License: Non-Commercial Use and Commercial Use. See LICENSE-NC and LICENSE-COM for details.
-
 # Nick's Path Swarm Chart Algorithm
-#%%
+
 import pandas as pd
 from math import pi, radians, cos, sin
 import numpy as np

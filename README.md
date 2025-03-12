@@ -1,6 +1,11 @@
 # vizmath
 
 ![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/vizmath_0_0_38.jpg)
+(Path Swarm Plot, Radial Treemap, Crystal Bar Chart, Quad-Tile Chart)
+
+> ![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/multichord.gif)
+(Multichord Diagram)
+
 Library of unique visualization algorithms. From time to time, I like to come up with fun new ways to visualize data and turn those ideas into python code!
 
 ## install
@@ -14,6 +19,46 @@ Dependencies:
 - `scipy` with .optimize, .interpolate, and .spatial for special operations
 
 ## viz methods
+### Multichord Diagram
+Evolution (Venn Diagram > Chord Diagram > UpSet Plot > Multichord Diagram):
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/mc_2.jpg)
+
+Multi-Arc Diagram Illustrating a Cartesian Layout of a Multichord:
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/mc_3.jpg)
+
+Add multiset and set legends:
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/mc_1.jpg)
+
+Input Data:
+```
+import pandas as pd
+# setup unique multisets and their values
+data = [['a,b,d', .000001], ['b,c', .000001], ['b,d', .000001], ['c', .000001]]
+df = pd.DataFrame(data, columns = ['multiset', 'value'])
+```
+
+Multichord:
+```
+from vizmath.multichord_diagram import multichord
+mc = multichord(df, multiset_field='multiset', value_field='value', percent=50., rotate_deg=-90) #order = 'b,c,d,a',
+mc.multichord_plot(level = 3, transparency = 0.5)
+```
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/mc_5.jpg)
+
+Random Multichord:
+```
+mc = multichord.random_multichord(num_sets=4, num_multisets=7, percent=75)
+mc.multichord_plot(level=3)
+```
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/mc_4.jpg)
+
+Outputs:
+```
+mc.o_multichord.df.head()
+mc.upset_df.head()
+```
+![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/mc_6.jpg)
+
 ### Path-Swarm
 Elements:
 ![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/ps_1.jpg)

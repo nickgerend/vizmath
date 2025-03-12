@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="vizmath",
-    version="0.0.42",
+    version="0.0.43",
     description="Visualization math toolkit.",
     long_description=(Path(__file__).parent / "README.md").read_text(),
     long_description_content_type="text/markdown",

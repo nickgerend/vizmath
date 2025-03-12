@@ -40,7 +40,8 @@ df = pd.DataFrame(data, columns = ['multiset', 'value'])
 Multichord:
 ```
 from vizmath.multichord_diagram import multichord
-mc = multichord(df, multiset_field='multiset', value_field='value', percent=50., rotate_deg=-90) #order = 'b,c,d,a',
+mc = multichord(df, multiset_field='multiset', value_field='value', 
+    percent=50., rotate_deg=-90)
 mc.multichord_plot(level = 3, transparency = 0.5)
 ```
 ![vizmath](https://github.com/nickgerend/vizmath/raw/main/assets/mc_5.jpg)

@@ -8,6 +8,8 @@
 
 Library of unique visualization algorithms. From time to time, I like to come up with fun new ways to visualize data and turn those ideas into python code!
 
+### Walkthroughs: https://towardsdatascience.com/author/nickgerend/
+
 ## install
 pip install vizmath
 

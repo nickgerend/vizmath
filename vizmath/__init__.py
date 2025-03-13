@@ -1,4 +1,4 @@
-__version__ = "0.0.46"
+__version__ = "0.0.47"
 from vizmath.functions import *
 from vizmath.draw import *
 from vizmath.radial_treemap import *

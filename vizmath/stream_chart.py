@@ -23,10 +23,10 @@ class stream:
         self.step_factor = step_factor
 
         self.o_stream = dp()
-        self.stream_chart()
+        self.__stream_chart()
         self.o_stream.to_dataframe()
 
-    def stream_chart(self):
+    def __stream_chart(self):
 
         item_dict = {}
         value_add = 0.
@@ -57,14 +57,14 @@ class stream:
                     else:
                         item_dict[item] = [value, 1]
                     if value == item_dict[item][0]:
-                        self.o_stream.append(item, x, value, path, value=row[value_field], rank=rank)
+                        self.o_stream.append(item, x, value, path, position=x, value=row[value_field], rank=rank)
                     else:
                         sigmoid = vf.sigmoid(last_x, item_dict[item][0], x, value, points, limit=factor)
                         for i in range(len(sigmoid)):
-                            self.o_stream.append(item, sigmoid[i][0], sigmoid[i][1], path, value=row[value_field], rank=rank)
+                            self.o_stream.append(item, sigmoid[i][0], sigmoid[i][1], path, position=x, value=row[value_field], rank=rank)
                             path += 1
                 else:
-                    self.o_stream.append(item, x, value, 1, value=row[value_field], rank=rank)
+                    self.o_stream.append(item, x, value, 1, position=x, value=row[value_field], rank=rank)
                 item_dict[item] = [value, path]
                 value += buffer
                 order += 1
@@ -91,14 +91,14 @@ class stream:
                         item_dict_2[item] = [value - row[value_field], 0]
                     if value - row[value_field] == item_dict_2[item][0]:
                         #add same y, new x
-                        self.o_stream.append(item, x, value - row[value_field], path, value=row[value_field], rank=rank)
+                        self.o_stream.append(item, x, value - row[value_field], path, position=x, value=row[value_field], rank=rank)
                     else:
                         #sigmoid
                         sigmoid = vf.sigmoid(last_x, item_dict_2[item][0], x, value - row[value_field], points, limit=factor)
                         for i in range(len(sigmoid)):
-                            self.o_stream.append(item, sigmoid[i][0], sigmoid[i][1], path, value=row[value_field], rank=rank)
+                            self.o_stream.append(item, sigmoid[i][0], sigmoid[i][1], path, position=x, value=row[value_field], rank=rank)
                 else:
-                    self.o_stream.append(item, x, value - row[value_field], 1, value=row[value_field], rank=rank)
+                    self.o_stream.append(item, x, value - row[value_field], 1, position=x, value=row[value_field], rank=rank)
                 
                 item_dict_2[item] = [value - row[value_field], path]
                 value += buffer
@@ -116,7 +116,7 @@ class stream:
     
     def stream_plot(self, opacity=0.5, show=True):
         fig, axs = plt.subplots()
-        # axs.set_aspect('equal', adjustable='box')
+        # axs.set_aspect('equal', adjustable='box') # stream width consideration
 
         df_stream = self.o_stream.df.groupby(['id'])
         for group, rows in df_stream:
@@ -133,3 +133,13 @@ class stream:
         if show:
             plt.show()
         return fig, axs
+
+    def stream_df(self):
+        return self.o_stream.df
+    
+    def stream_df_rescale(self, xmin=None, xmax=None, ymin=None, ymax=None, nxmin=-1, nxmax=1, nymin=-1, nymax=1):
+        self.o_stream.to_dataframe()
+        return self.o_stream.dataframe_rescale(xmin, xmax, ymin, ymax, nxmin, nxmax, nymin, nymax)
+    
+    def stream_df_to_csv(self, file_name, directory=None):
+        return self.o_stream.dataframe_to_csv(file_name, directory)
